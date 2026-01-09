@@ -11,6 +11,9 @@ ai_digest_*.txt
 ai_digest_*.md
 ai_digest_*.html
 
+# Cache
+.rss_cache/
+
 # Python
 __pycache__/
 *.py[cod]

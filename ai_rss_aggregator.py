@@ -11,6 +11,7 @@ import logging
 import os
 import smtplib
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, List, Optional, Tuple
@@ -86,55 +87,153 @@ class AINewsAggregator:
         logger.info(f"Loaded config with {len(config['feeds'])} feeds and {len(config['keywords'])} keywords")
         return config
 
-    def fetch_feeds(self) -> List[dict]:
+    def fetch_feeds(self, use_cache: bool = True) -> List[dict]:
         """
-        Fetch articles from all configured RSS feeds.
+        Fetch articles from all configured RSS feeds concurrently.
+
+        Args:
+            use_cache: Whether to use cached responses (if cache enabled)
 
         Returns:
             List of articles with metadata
         """
+        # Initialize cache if configured
+        cache = None
+        cache_config = self.config.get('cache', {})
+        if cache_config.get('enabled', False) and use_cache:
+            from feed_cache import FeedCache
+            cache = FeedCache(
+                cache_dir=cache_config.get('directory', '.rss_cache'),
+                ttl_minutes=cache_config.get('ttl_minutes', 15)
+            )
+
         all_articles = []
 
-        for source_name, feed_url in self.feeds.items():
-            try:
-                logger.info(f"Fetching {source_name}...")
-
-                # Add timeout and user agent
-                response = requests.get(
+        # Fetch all feeds concurrently
+        with ThreadPoolExecutor(max_workers=min(10, len(self.feeds))) as executor:
+            future_to_source = {
+                executor.submit(
+                    self._fetch_single_feed,
+                    source_name,
                     feed_url,
-                    timeout=10,
-                    headers={'User-Agent': 'AI-RSS-Aggregator/1.0'}
-                )
-                response.raise_for_status()
+                    cache
+                ): source_name
+                for source_name, feed_url in self.feeds.items()
+            }
 
-                # Parse the feed
-                feed = feedparser.parse(response.content)
-
-                if feed.bozo and not feed.entries:
-                    logger.warning(f"Failed to parse feed {source_name}: {feed.bozo_exception}")
-                    continue
-
-                # Extract articles
-                for entry in feed.entries:
-                    article = {
-                        'source': source_name,
-                        'title': entry.get('title', 'No title'),
-                        'link': entry.get('link', ''),
-                        'description': entry.get('summary', entry.get('description', '')),
-                        'published': self._parse_date(entry),
-                        'content': self._extract_content(entry)
-                    }
-                    all_articles.append(article)
-
-                logger.info(f"  Found {len(feed.entries)} articles")
-
-            except requests.exceptions.RequestException as e:
-                logger.warning(f"Failed to fetch {source_name}: {e}")
-            except Exception as e:
-                logger.warning(f"Error processing {source_name}: {e}")
+            for future in as_completed(future_to_source):
+                source_name = future_to_source[future]
+                try:
+                    articles = future.result()
+                    all_articles.extend(articles)
+                except Exception as e:
+                    logger.warning(f"Error fetching {source_name}: {e}")
 
         logger.info(f"Total articles fetched: {len(all_articles)}")
         return all_articles
+
+    def _fetch_single_feed(
+        self,
+        source_name: str,
+        feed_url: str,
+        cache: Optional['FeedCache'] = None
+    ) -> List[dict]:
+        """
+        Fetch a single RSS feed with optional caching.
+
+        Args:
+            source_name: Display name for the source
+            feed_url: URL of the RSS feed
+            cache: Optional cache instance
+
+        Returns:
+            List of articles from this feed
+        """
+        articles = []
+
+        try:
+            logger.info(f"Fetching {source_name}...")
+
+            # Build request headers
+            headers = {'User-Agent': 'AI-RSS-Aggregator/1.0'}
+            content = None
+            cache_hit = False
+
+            # Check cache first
+            if cache:
+                cached_entry = cache.get(feed_url)
+                if cached_entry and not cached_entry.is_expired():
+                    # Valid cache, use it directly
+                    content = cached_entry.content
+                    cache_hit = True
+                    logger.debug(f"  Cache hit for {source_name}")
+                else:
+                    # Add conditional headers for stale cache
+                    headers.update(cache.get_conditional_headers(feed_url))
+
+            # Fetch from network if needed
+            if content is None:
+                response = requests.get(
+                    feed_url,
+                    timeout=10,
+                    headers=headers
+                )
+
+                if response.status_code == 304:
+                    # Not modified - use cached version
+                    cached_entry = cache.get(feed_url)
+                    if cached_entry:
+                        content = cached_entry.content
+                        cache_hit = True
+                        # Refresh cache timestamp
+                        cache.set(
+                            feed_url,
+                            content,
+                            etag=cached_entry.etag,
+                            last_modified=cached_entry.last_modified
+                        )
+                        logger.debug(f"  304 Not Modified for {source_name}")
+                else:
+                    response.raise_for_status()
+                    content = response.content
+
+                    # Update cache
+                    if cache:
+                        cache.set(
+                            feed_url,
+                            content,
+                            etag=response.headers.get('ETag'),
+                            last_modified=response.headers.get('Last-Modified')
+                        )
+
+            # Parse the feed
+            feed = feedparser.parse(content)
+
+            if feed.bozo and not feed.entries:
+                logger.warning(f"Failed to parse feed {source_name}: {feed.bozo_exception}")
+                return articles
+
+            # Extract articles
+            for entry in feed.entries:
+                article = {
+                    'source': source_name,
+                    'title': entry.get('title', 'No title'),
+                    'link': entry.get('link', ''),
+                    'description': entry.get('summary', entry.get('description', '')),
+                    'published': self._parse_date(entry),
+                    'content': self._extract_content(entry)
+                }
+                articles.append(article)
+
+            status = "cached" if cache_hit else "fetched"
+            logger.info(f"  Found {len(feed.entries)} articles ({status})")
+
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Failed to fetch {source_name}: {e}")
+        except Exception as e:
+            logger.warning(f"Error processing {source_name}: {e}")
+
+        return articles
 
     def _parse_date(self, entry: dict) -> Optional[datetime.datetime]:
         """
@@ -546,20 +645,21 @@ class AINewsAggregator:
         except Exception as e:
             logger.error(f"Error sending email: {e}")
 
-    def run(self, send_email: bool = True):
+    def run(self, send_email: bool = True, use_cache: bool = True):
         """
         Run the full aggregation pipeline.
 
         Args:
             send_email: Whether to send email digest
+            use_cache: Whether to use feed cache
 
         Returns:
             Tuple of (articles_count, filtered_count)
         """
         logger.info("Starting AI News Aggregator")
 
-        # Fetch articles
-        articles = self.fetch_feeds()
+        # Fetch articles (with caching if enabled)
+        articles = self.fetch_feeds(use_cache=use_cache)
 
         if not articles:
             logger.warning("No articles fetched")
@@ -635,6 +735,21 @@ def main():
         action='store_true',
         help='Enable verbose logging'
     )
+    parser.add_argument(
+        '--no-cache',
+        action='store_true',
+        help='Disable feed caching (always fetch fresh)'
+    )
+    parser.add_argument(
+        '--clear-cache',
+        action='store_true',
+        help='Clear the feed cache before running'
+    )
+    parser.add_argument(
+        '--force-refresh',
+        action='store_true',
+        help='Force refresh all feeds (ignore cache)'
+    )
 
     args = parser.parse_args()
 
@@ -643,9 +758,26 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
 
     try:
-        # Initialize and run aggregator
+        # Initialize aggregator
         aggregator = AINewsAggregator(args.config)
-        total, filtered = aggregator.run(send_email=not args.no_email)
+
+        # Handle cache clearing
+        if args.clear_cache:
+            cache_config = aggregator.config.get('cache', {})
+            if cache_config.get('enabled', False):
+                from feed_cache import FeedCache
+                cache = FeedCache(cache_config.get('directory', '.rss_cache'))
+                cleared = cache.clear()
+                logger.info(f"Cleared {cleared} cached entries")
+
+        # Determine cache usage
+        use_cache = not (args.no_cache or args.force_refresh)
+
+        # Run aggregator
+        total, filtered = aggregator.run(
+            send_email=not args.no_email,
+            use_cache=use_cache
+        )
 
         # Print summary
         print(f"\n{'='*60}")
