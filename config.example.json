@@ -1,0 +1,54 @@
+{
+  "feeds": {
+    "OpenAI": "https://openai.com/blog/rss.xml",
+    "Anthropic": "https://www.anthropic.com/rss.xml",
+    "Google AI Blog": "https://ai.googleblog.com/feeds/posts/default",
+    "DeepMind": "https://deepmind.google/blog/rss.xml",
+    "Meta AI": "https://ai.meta.com/blog/rss/",
+    "Microsoft Research": "https://www.microsoft.com/en-us/research/feed/",
+    "MIT News - AI": "https://news.mit.edu/topic/artificial-intelligence2/feed",
+    "Hugging Face Blog": "https://huggingface.co/blog/feed.xml",
+    "PyTorch Blog": "https://pytorch.org/blog/feed.xml"
+  },
+  "keywords": {
+    "computer vision": 3.0,
+    "pytorch": 2.5,
+    "sensor": 2.0,
+    "sensors": 2.0,
+    "machine learning": 1.5,
+    "deep learning": 1.5,
+    "neural network": 1.5,
+    "CNN": 2.0,
+    "convolutional": 2.0,
+    "image recognition": 2.5,
+    "object detection": 2.5,
+    "semantic segmentation": 2.5,
+    "depth estimation": 2.5,
+    "3D": 2.0,
+    "autonomous": 1.5,
+    "robotics": 2.0,
+    "edge": 2.0,
+    "embedded": 2.0,
+    "optimization": 1.5,
+    "inference": 1.5,
+    "model compression": 2.0,
+    "quantization": 2.0
+  },
+  "filtering": {
+    "min_score": 1.5,
+    "days_back": 30
+  },
+  "email": {
+    "enabled": false,
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 465,
+    "sender_email": "your_email@gmail.com",
+    "sender_password": "your_app_password",
+    "recipient_email": "your_email@gmail.com",
+    "send_if_empty": false
+  },
+  "output": {
+    "directory": ".",
+    "filename_prefix": "ai_digest"
+  }
+}

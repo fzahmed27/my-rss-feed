@@ -1,0 +1,30 @@
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Configuration (may contain sensitive data)
+config.json
+
+# Generated digests
+ai_digest_*.txt
+ai_digest_*.md
+ai_digest_*.html
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
