@@ -10,6 +10,7 @@ import difflib
 import json
 import logging
 import os
+import re
 import smtplib
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -272,6 +273,45 @@ class AINewsAggregator:
             return ' '.join([c.get('value', '') for c in entry.content])
 
         return entry.get('summary', entry.get('description', ''))
+
+    def _strip_html_tags(self, html_text: str) -> str:
+        """
+        Strip HTML tags from text while preserving readable content.
+
+        Args:
+            html_text: Text potentially containing HTML
+
+        Returns:
+            Plain text with HTML tags removed
+        """
+        if not html_text:
+            return ''
+
+        # Remove <script> and <style> tags and their content
+        html_text = re.sub(r'<script[^>]*?>.*?</script>', '', html_text, flags=re.DOTALL | re.IGNORECASE)
+        html_text = re.sub(r'<style[^>]*?>.*?</style>', '', html_text, flags=re.DOTALL | re.IGNORECASE)
+
+        # Remove HTML comments
+        html_text = re.sub(r'<!--.*?-->', '', html_text, flags=re.DOTALL)
+
+        # Replace <br> and <p> tags with spaces to preserve readability
+        html_text = re.sub(r'<br\s*/?>|</p>', ' ', html_text, flags=re.IGNORECASE)
+
+        # Remove all other HTML tags
+        html_text = re.sub(r'<[^>]+>', '', html_text)
+
+        # Decode common HTML entities
+        html_text = html_text.replace('&nbsp;', ' ')
+        html_text = html_text.replace('&amp;', '&')
+        html_text = html_text.replace('&lt;', '<')
+        html_text = html_text.replace('&gt;', '>')
+        html_text = html_text.replace('&quot;', '"')
+        html_text = html_text.replace('&#39;', "'")
+
+        # Collapse multiple whitespace into single space
+        html_text = re.sub(r'\s+', ' ', html_text)
+
+        return html_text.strip()
 
     def score_article(self, article: dict) -> float:
         """
@@ -538,6 +578,7 @@ class AINewsAggregator:
     def categorize_articles(self, articles: List[Tuple[dict, float]]) -> Dict[str, List[Tuple[dict, float]]]:
         """
         Categorize articles into topic groups based on keywords.
+        Each article is assigned to only ONE category - its best match.
 
         Args:
             articles: List of (article, score) tuples
@@ -545,15 +586,16 @@ class AINewsAggregator:
         Returns:
             Dictionary mapping category names to lists of (article, score) tuples
         """
-        # Define keyword categories
+        # Define keyword categories with priority order
+        # Higher priority = more specific topics
         categories = {
-            'Robotics & Manipulation': ['robotics', 'robot', 'grasp', 'grasping', 'manipulation', 'dexterous', 'autonomous'],
+            'Tactile & Haptics': ['tactile', 'haptic', 'haptics', 'touch sensing', 'force sensing'],
             'Computer Vision': ['computer vision', 'image recognition', 'object detection', 'semantic segmentation',
                               'depth estimation', 'cnn', 'convolutional'],
-            'Tactile & Haptics': ['tactile', 'haptic', 'haptics', 'touch sensing', 'force sensing'],
+            'Robotics & Manipulation': ['robotics', 'robot', 'grasp', 'grasping', 'manipulation', 'dexterous', 'autonomous'],
+            'Machine Learning & AI': ['machine learning', 'deep learning', 'neural network', 'pytorch'],
             'Sensors & Hardware': ['sensor', 'sensors', 'embedded', 'edge', 'inference', 'model compression',
                                   'quantization', 'optimization'],
-            'Machine Learning & AI': ['machine learning', 'deep learning', 'neural network', 'pytorch'],
             'Other': []  # Catch-all for articles that don't fit other categories
         }
 
@@ -565,20 +607,29 @@ class AINewsAggregator:
             content = article.get('content', '').lower()
             full_text = f"{title} {description} {content}"
 
-            # Determine which category(ies) this article belongs to
-            matched_categories = []
+            # Find the BEST matching category (first match in priority order)
+            # This prevents duplicate articles across tabs
+            best_category = None
+            max_keyword_matches = 0
+
             for category, keywords in categories.items():
                 if category == 'Other':
                     continue
+
+                # Count keyword matches for this category
+                keyword_matches = 0
                 for keyword in keywords:
                     if keyword.lower() in full_text:
-                        matched_categories.append(category)
-                        break
+                        keyword_matches += 1
 
-            # Add to matched categories (can be in multiple)
-            if matched_categories:
-                for cat in matched_categories:
-                    categorized[cat].append((article, score))
+                # Use the category with the most keyword matches
+                if keyword_matches > max_keyword_matches:
+                    max_keyword_matches = keyword_matches
+                    best_category = category
+
+            # Assign to best matching category
+            if best_category:
+                categorized[best_category].append((article, score))
             else:
                 # No match, put in "Other"
                 categorized['Other'].append((article, score))
@@ -613,233 +664,575 @@ class AINewsAggregator:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI News Digest - {date_str}</title>
     <style>
+        /* Design Tokens - CSS Custom Properties */
+        :root {{
+            /* Colors - Light Mode */
+            --color-primary: #0066cc;
+            --color-primary-hover: #0052a3;
+            --color-primary-light: #e6f2ff;
+
+            --color-surface: #ffffff;
+            --color-surface-secondary: #f8f9fa;
+            --color-surface-tertiary: #f0f2f5;
+
+            --color-text-primary: #1a1a1a;
+            --color-text-secondary: #4a5568;
+            --color-text-tertiary: #718096;
+
+            --color-border: #e2e8f0;
+            --color-border-focus: #0066cc;
+
+            --color-success: #059669;
+            --color-info: #64748b;
+
+            /* Spacing Scale (8px base) */
+            --space-1: 0.25rem;  /* 4px */
+            --space-2: 0.5rem;   /* 8px */
+            --space-3: 0.75rem;  /* 12px */
+            --space-4: 1rem;     /* 16px */
+            --space-5: 1.25rem;  /* 20px */
+            --space-6: 1.5rem;   /* 24px */
+            --space-8: 2rem;     /* 32px */
+            --space-10: 2.5rem;  /* 40px */
+
+            /* Typography Scale */
+            --font-size-sm: 0.875rem;   /* 14px */
+            --font-size-base: 1rem;     /* 16px */
+            --font-size-md: 1.125rem;   /* 18px */
+            --font-size-lg: 1.25rem;    /* 20px */
+            --font-size-xl: 1.5rem;     /* 24px */
+            --font-size-2xl: 2rem;      /* 32px */
+
+            --font-weight-normal: 400;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 600;
+            --font-weight-bold: 700;
+
+            --line-height-tight: 1.4;
+            --line-height-normal: 1.6;
+            --line-height-relaxed: 1.8;
+
+            /* Border Radius */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-full: 9999px;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {{
+            :root {{
+                --color-primary: #3b82f6;
+                --color-primary-hover: #60a5fa;
+                --color-primary-light: #1e3a5f;
+
+                --color-surface: #1a1a1a;
+                --color-surface-secondary: #2d2d2d;
+                --color-surface-tertiary: #3a3a3a;
+
+                --color-text-primary: #f5f5f5;
+                --color-text-secondary: #d1d5db;
+                --color-text-tertiary: #9ca3af;
+
+                --color-border: #404040;
+                --color-border-focus: #3b82f6;
+
+                --color-success: #10b981;
+                --color-info: #94a3b8;
+            }}
+        }}
+
+        /* Base Styles */
+        * {{
+            box-sizing: border-box;
+        }}
+
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: var(--line-height-normal);
+            margin: 0;
+            padding: var(--space-4);
+            background-color: var(--color-surface-tertiary);
+            color: var(--color-text-primary);
+            font-size: var(--font-size-base);
+        }}
+
+        /* Skip to Main Content */
+        .skip-link {{
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--color-primary);
+            color: white;
+            padding: var(--space-2) var(--space-4);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            z-index: 100;
+        }}
+
+        .skip-link:focus {{
+            top: var(--space-2);
+            left: var(--space-2);
+        }}
+
+        .container {{
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            background-color: var(--color-surface);
+            padding: var(--space-6);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
         }}
-        .container {{
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
+
         h1 {{
-            color: #333;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-primary);
+            margin: 0 0 var(--space-4) 0;
+            padding-bottom: var(--space-4);
+            border-bottom: 3px solid var(--color-primary);
+            line-height: var(--line-height-tight);
         }}
+
         .summary {{
-            color: #666;
-            font-size: 0.95em;
-            margin-bottom: 25px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-6);
+            padding: var(--space-4);
+            background-color: var(--color-surface-secondary);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--color-primary);
         }}
+
+        /* Tabs - Mobile First with Horizontal Scroll */
         .tabs {{
             display: flex;
-            gap: 5px;
-            margin-bottom: 0;
-            border-bottom: 2px solid #dee2e6;
-            flex-wrap: wrap;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-border) transparent;
+            padding-bottom: var(--space-2);
+            border-bottom: 2px solid var(--color-border);
         }}
+
+        .tabs::-webkit-scrollbar {{
+            height: 6px;
+        }}
+
+        .tabs::-webkit-scrollbar-track {{
+            background: transparent;
+        }}
+
+        .tabs::-webkit-scrollbar-thumb {{
+            background-color: var(--color-border);
+            border-radius: var(--radius-full);
+        }}
+
         .tab {{
-            padding: 12px 20px;
-            background-color: #f8f9fa;
-            border: none;
+            flex-shrink: 0;
+            min-width: 120px;
+            padding: var(--space-3) var(--space-5);
+            background-color: var(--color-surface-secondary);
+            border: 2px solid transparent;
             cursor: pointer;
-            font-size: 0.95em;
-            font-weight: 500;
-            color: #495057;
-            border-radius: 4px 4px 0 0;
-            transition: all 0.3s;
-            margin-bottom: -2px;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+            white-space: nowrap;
+            text-align: center;
         }}
+
         .tab:hover {{
-            background-color: #e9ecef;
-            color: #007bff;
+            background-color: var(--color-primary-light);
+            color: var(--color-primary);
+            transform: translateY(-2px);
         }}
+
+        .tab:focus {{
+            outline: 2px solid var(--color-border-focus);
+            outline-offset: 2px;
+        }}
+
         .tab.active {{
-            background-color: #007bff;
+            background-color: var(--color-primary);
             color: white;
-            border-bottom: 2px solid #007bff;
+            border-color: var(--color-primary);
+            font-weight: var(--font-weight-semibold);
         }}
+
         .tab-content {{
             display: none;
-            padding: 20px 0;
-            animation: fadeIn 0.3s;
+            padding: var(--space-6) 0;
+            animation: fadeIn var(--transition-base);
         }}
+
         .tab-content.active {{
             display: block;
         }}
+
         @keyframes fadeIn {{
-            from {{ opacity: 0; }}
-            to {{ opacity: 1; }}
+            from {{
+                opacity: 0;
+                transform: translateY(8px);
+            }}
+            to {{
+                opacity: 1;
+                transform: translateY(0);
+            }}
         }}
-        .article {{
-            margin: 15px 0;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-left: 4px solid #007bff;
-            border-radius: 4px;
-            transition: all 0.2s;
+
+        h2.category-header {{
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-primary);
+            margin: 0 0 var(--space-6) 0;
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--color-border);
         }}
-        .article:hover {{
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            background-color: #fff;
+
+        /* Article Cards */
+        article.article {{
+            margin-bottom: var(--space-5);
+            padding: var(--space-5);
+            background-color: var(--color-surface-secondary);
+            border-left: 4px solid var(--color-primary);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
         }}
+
+        article.article:hover {{
+            box-shadow: var(--shadow-md);
+            background-color: var(--color-surface);
+            transform: translateX(4px);
+        }}
+
         .article-title {{
-            font-size: 1.1em;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-size: var(--font-size-md);
+            font-weight: var(--font-weight-semibold);
+            margin-bottom: var(--space-3);
+            line-height: var(--line-height-tight);
         }}
+
         .article-title a {{
-            color: #333;
+            color: var(--color-text-primary);
             text-decoration: none;
+            transition: color var(--transition-fast);
         }}
+
         .article-title a:hover {{
-            color: #007bff;
+            color: var(--color-primary);
+            text-decoration: underline;
         }}
+
+        .article-title a:focus {{
+            outline: 2px solid var(--color-border-focus);
+            outline-offset: 2px;
+            border-radius: var(--radius-sm);
+        }}
+
         .article-meta {{
             display: flex;
-            gap: 10px;
+            gap: var(--space-3);
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: var(--space-3);
             flex-wrap: wrap;
         }}
+
         .score {{
-            display: inline-block;
-            background-color: #28a745;
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--color-success);
             color: white;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: 600;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            line-height: 1;
         }}
+
         .source-badge {{
-            display: inline-block;
-            background-color: #6c757d;
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--color-info);
             color: white;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 0.85em;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            line-height: 1;
         }}
+
         .description {{
-            color: #666;
-            font-size: 0.95em;
-            line-height: 1.5;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+            line-height: var(--line-height-relaxed);
+            overflow: hidden;
         }}
-        .category-header {{
-            color: #007bff;
-            font-size: 1.3em;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
+
+        /* Constrain any images or media in descriptions */
+        .description img,
+        .description video,
+        .description iframe {{
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: var(--space-3) 0;
+            border-radius: var(--radius-sm);
         }}
+
         .footer {{
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            color: #666;
-            font-size: 0.9em;
+            margin-top: var(--space-10);
+            padding-top: var(--space-6);
+            border-top: 1px solid var(--color-border);
+            color: var(--color-text-tertiary);
+            font-size: var(--font-size-sm);
             text-align: center;
         }}
+
         .count-badge {{
-            background-color: #007bff;
+            display: inline-block;
+            background-color: var(--color-primary);
             color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.85em;
-            font-weight: 600;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            line-height: 1;
+            margin-left: var(--space-1);
+        }}
+
+        /* Tablet Breakpoint (768px+) */
+        @media (min-width: 768px) {{
+            body {{
+                padding: var(--space-6);
+            }}
+
+            .container {{
+                padding: var(--space-8);
+            }}
+
+            .tabs {{
+                flex-wrap: wrap;
+                overflow-x: visible;
+            }}
+
+            .tab {{
+                min-width: auto;
+            }}
+
+            h1 {{
+                font-size: clamp(var(--font-size-xl), 4vw, var(--font-size-2xl));
+            }}
+        }}
+
+        /* Desktop Breakpoint (1024px+) */
+        @media (min-width: 1024px) {{
+            body {{
+                padding: var(--space-8);
+            }}
+
+            .container {{
+                padding: var(--space-10);
+            }}
+        }}
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {{
+            * {{
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }}
+        }}
+
+        /* Print Styles */
+        @media print {{
+            body {{
+                background-color: white;
+                padding: 0;
+            }}
+
+            .container {{
+                box-shadow: none;
+                padding: 0;
+            }}
+
+            .tabs {{
+                display: none;
+            }}
+
+            .tab-content {{
+                display: block !important;
+                page-break-before: always;
+            }}
+
+            article.article {{
+                page-break-inside: avoid;
+            }}
         }}
     </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <div class="container">
         <h1>🤖 AI News Digest - {date_str}</h1>
-        <div class="summary">
+        <div class="summary" role="status" aria-live="polite">
             📊 Total: {len(articles)} articles across {len(categorized)} topic categories
         </div>
 
-        <div class="tabs">
+        <div class="tabs" role="tablist" aria-label="Article categories">
 """
 
-        # Generate tab buttons
+        # Generate tab buttons with ARIA
         for idx, (category, cat_articles) in enumerate(sorted_categories):
-            active_class = " active" if idx == 0 else ""
+            is_active = idx == 0
             safe_category = category.replace(' ', '_').replace('&', 'and')
-            html += f"""            <button class="tab{active_class}" onclick="openTab(event, '{safe_category}')">{category} <span class="count-badge">{len(cat_articles)}</span></button>
+            html += f"""            <button
+                class="tab{"  active" if is_active else ""}"
+                role="tab"
+                aria-selected="{"true" if is_active else "false"}"
+                aria-controls="{safe_category}"
+                id="{safe_category}-tab"
+                tabindex="{"0" if is_active else "-1"}"
+                onclick="openTab(event, '{safe_category}')"
+            >
+                {category} <span class="count-badge" aria-label="{len(cat_articles)} articles">{len(cat_articles)}</span>
+            </button>
 """
 
         html += """        </div>
 """
 
-        # Generate tab contents
+        # Generate tab contents with ARIA and semantic HTML
         for idx, (category, cat_articles) in enumerate(sorted_categories):
-            active_class = " active" if idx == 0 else ""
+            is_active = idx == 0
             safe_category = category.replace(' ', '_').replace('&', 'and')
 
             html += f"""
-        <div id="{safe_category}" class="tab-content{active_class}">
-            <div class="category-header">{category} ({len(cat_articles)} articles)</div>
+        <div
+            id="{safe_category}"
+            class="tab-content{"  active" if is_active else ""}"
+            role="tabpanel"
+            aria-labelledby="{safe_category}-tab"
+            tabindex="0"
+        >
+            <h2 class="category-header">{category} <span class="count-badge">{len(cat_articles)}</span></h2>
 """
 
             for article, score in cat_articles:
-                description = article.get('description', '').replace('\n', ' ').strip()
+                # Strip HTML tags from description and clean up
+                raw_description = article.get('description', '')
+                description = self._strip_html_tags(raw_description)
+                description = description.replace('\n', ' ').strip()
                 if len(description) > 300:
                     description = description[:297] + "..."
 
                 source = article.get('source', 'Unknown')
+                # Escape HTML entities in title for safety
+                title = article.get('title', 'Untitled').replace('<', '&lt;').replace('>', '&gt;')
 
                 html += f"""
-            <div class="article">
-                <div class="article-title">
-                    <a href="{article['link']}" target="_blank">{article['title']}</a>
-                </div>
+            <article class="article">
+                <h3 class="article-title">
+                    <a href="{article['link']}" target="_blank" rel="noopener noreferrer">{title}</a>
+                </h3>
                 <div class="article-meta">
-                    <span class="score">⭐ {score:.1f}</span>
-                    <span class="source-badge">📰 {source}</span>
+                    <span class="score" aria-label="Relevance score {score:.1f}">⭐ {score:.1f}</span>
+                    <span class="source-badge" aria-label="Source: {source}">📰 {source}</span>
                 </div>
 """
                 if description:
-                    html += f"""                <div class="description">{description}</div>
+                    html += f"""                <p class="description">{description}</p>
 """
-                html += """            </div>
+                html += """            </article>
 """
 
             html += """        </div>
 """
 
         html += f"""
-        <div class="footer">
+        <footer class="footer">
             Generated by AI RSS Feed Aggregator on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-        </div>
+        </footer>
     </div>
 
     <script>
         function openTab(evt, tabName) {{
-            // Hide all tab contents
-            var tabContents = document.getElementsByClassName("tab-content");
-            for (var i = 0; i < tabContents.length; i++) {{
-                tabContents[i].classList.remove("active");
+            // Get all tabs and tab contents
+            var tabContents = document.querySelectorAll('[role="tabpanel"]');
+            var tabs = document.querySelectorAll('[role="tab"]');
+
+            // Hide all tab contents and deactivate all tabs
+            tabContents.forEach(function(content) {{
+                content.classList.remove('active');
+            }});
+
+            tabs.forEach(function(tab) {{
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
+                tab.setAttribute('tabindex', '-1');
+            }});
+
+            // Show selected tab content and activate tab
+            var selectedPanel = document.getElementById(tabName);
+            if (selectedPanel) {{
+                selectedPanel.classList.add('active');
+                selectedPanel.focus();
             }}
 
-            // Remove active class from all tabs
-            var tabs = document.getElementsByClassName("tab");
-            for (var i = 0; i < tabs.length; i++) {{
-                tabs[i].classList.remove("active");
+            if (evt && evt.currentTarget) {{
+                evt.currentTarget.classList.add('active');
+                evt.currentTarget.setAttribute('aria-selected', 'true');
+                evt.currentTarget.setAttribute('tabindex', '0');
             }}
-
-            // Show the selected tab content and mark tab as active
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
         }}
+
+        // Keyboard navigation for tabs
+        document.addEventListener('DOMContentLoaded', function() {{
+            var tabs = document.querySelectorAll('[role="tab"]');
+
+            tabs.forEach(function(tab, index) {{
+                tab.addEventListener('keydown', function(e) {{
+                    var currentIndex = Array.from(tabs).indexOf(e.target);
+                    var nextIndex;
+
+                    // Arrow key navigation
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {{
+                        e.preventDefault();
+                        nextIndex = (currentIndex + 1) % tabs.length;
+                        tabs[nextIndex].focus();
+                        tabs[nextIndex].click();
+                    }} else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {{
+                        e.preventDefault();
+                        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                        tabs[nextIndex].focus();
+                        tabs[nextIndex].click();
+                    }} else if (e.key === 'Home') {{
+                        e.preventDefault();
+                        tabs[0].focus();
+                        tabs[0].click();
+                    }} else if (e.key === 'End') {{
+                        e.preventDefault();
+                        tabs[tabs.length - 1].focus();
+                        tabs[tabs.length - 1].click();
+                    }}
+                }});
+            }});
+        }});
     </script>
 </body>
 </html>
