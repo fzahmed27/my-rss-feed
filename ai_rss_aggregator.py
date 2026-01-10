@@ -535,24 +535,75 @@ class AINewsAggregator:
 
         return '\n'.join(lines)
 
+    def categorize_articles(self, articles: List[Tuple[dict, float]]) -> Dict[str, List[Tuple[dict, float]]]:
+        """
+        Categorize articles into topic groups based on keywords.
+
+        Args:
+            articles: List of (article, score) tuples
+
+        Returns:
+            Dictionary mapping category names to lists of (article, score) tuples
+        """
+        # Define keyword categories
+        categories = {
+            'Robotics & Manipulation': ['robotics', 'robot', 'grasp', 'grasping', 'manipulation', 'dexterous', 'autonomous'],
+            'Computer Vision': ['computer vision', 'image recognition', 'object detection', 'semantic segmentation',
+                              'depth estimation', 'cnn', 'convolutional'],
+            'Tactile & Haptics': ['tactile', 'haptic', 'haptics', 'touch sensing', 'force sensing'],
+            'Sensors & Hardware': ['sensor', 'sensors', 'embedded', 'edge', 'inference', 'model compression',
+                                  'quantization', 'optimization'],
+            'Machine Learning & AI': ['machine learning', 'deep learning', 'neural network', 'pytorch'],
+            'Other': []  # Catch-all for articles that don't fit other categories
+        }
+
+        categorized = {cat: [] for cat in categories.keys()}
+
+        for article, score in articles:
+            title = article.get('title', '').lower()
+            description = article.get('description', '').lower()
+            content = article.get('content', '').lower()
+            full_text = f"{title} {description} {content}"
+
+            # Determine which category(ies) this article belongs to
+            matched_categories = []
+            for category, keywords in categories.items():
+                if category == 'Other':
+                    continue
+                for keyword in keywords:
+                    if keyword.lower() in full_text:
+                        matched_categories.append(category)
+                        break
+
+            # Add to matched categories (can be in multiple)
+            if matched_categories:
+                for cat in matched_categories:
+                    categorized[cat].append((article, score))
+            else:
+                # No match, put in "Other"
+                categorized['Other'].append((article, score))
+
+        # Remove empty categories
+        categorized = {cat: arts for cat, arts in categorized.items() if arts}
+
+        return categorized
+
     def generate_html_digest(self, articles: List[Tuple[dict, float]], date_str: str) -> str:
         """
-        Generate HTML digest with styling.
+        Generate HTML digest with tabbed topic categories.
 
         Args:
             articles: List of (article, score) tuples
             date_str: Date string for the digest
 
         Returns:
-            HTML digest
+            HTML digest with tabs
         """
-        # Group by source
-        by_source = {}
-        for article, score in articles:
-            source = article['source']
-            if source not in by_source:
-                by_source[source] = []
-            by_source[source].append((article, score))
+        # Categorize articles by topic
+        categorized = self.categorize_articles(articles)
+
+        # Sort categories by article count (descending)
+        sorted_categories = sorted(categorized.items(), key=lambda x: len(x[1]), reverse=True)
 
         # Generate HTML
         html = f"""<!DOCTYPE html>
@@ -565,7 +616,7 @@ class AINewsAggregator:
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -580,24 +631,72 @@ class AINewsAggregator:
             color: #333;
             border-bottom: 3px solid #007bff;
             padding-bottom: 10px;
+            margin-bottom: 10px;
         }}
-        h2 {{
+        .summary {{
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 25px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }}
+        .tabs {{
+            display: flex;
+            gap: 5px;
+            margin-bottom: 0;
+            border-bottom: 2px solid #dee2e6;
+            flex-wrap: wrap;
+        }}
+        .tab {{
+            padding: 12px 20px;
+            background-color: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: #495057;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s;
+            margin-bottom: -2px;
+        }}
+        .tab:hover {{
+            background-color: #e9ecef;
             color: #007bff;
-            margin-top: 30px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
+        }}
+        .tab.active {{
+            background-color: #007bff;
+            color: white;
+            border-bottom: 2px solid #007bff;
+        }}
+        .tab-content {{
+            display: none;
+            padding: 20px 0;
+            animation: fadeIn 0.3s;
+        }}
+        .tab-content.active {{
+            display: block;
+        }}
+        @keyframes fadeIn {{
+            from {{ opacity: 0; }}
+            to {{ opacity: 1; }}
         }}
         .article {{
-            margin: 20px 0;
+            margin: 15px 0;
             padding: 15px;
             background-color: #f9f9f9;
             border-left: 4px solid #007bff;
             border-radius: 4px;
+            transition: all 0.2s;
+        }}
+        .article:hover {{
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: #fff;
         }}
         .article-title {{
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
         }}
         .article-title a {{
             color: #333;
@@ -605,26 +704,43 @@ class AINewsAggregator:
         }}
         .article-title a:hover {{
             color: #007bff;
-            text-decoration: underline;
+        }}
+        .article-meta {{
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
         }}
         .score {{
             display: inline-block;
             background-color: #28a745;
             color: white;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 0.9em;
-            font-weight: bold;
-            margin-right: 10px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }}
+        .source-badge {{
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
         }}
         .description {{
             color: #666;
-            margin-top: 10px;
+            font-size: 0.95em;
+            line-height: 1.5;
         }}
-        .source-count {{
-            color: #666;
-            font-weight: normal;
-            font-size: 0.9em;
+        .category-header {{
+            color: #007bff;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
         }}
         .footer {{
             margin-top: 40px;
@@ -634,38 +750,70 @@ class AINewsAggregator:
             font-size: 0.9em;
             text-align: center;
         }}
+        .count-badge {{
+            background-color: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>AI News Digest - {date_str}</h1>
+        <h1>🤖 AI News Digest - {date_str}</h1>
+        <div class="summary">
+            📊 Total: {len(articles)} articles across {len(categorized)} topic categories
+        </div>
+
+        <div class="tabs">
 """
 
-        # Add articles by source
-        for source in sorted(by_source.keys()):
-            source_articles = by_source[source]
+        # Generate tab buttons
+        for idx, (category, cat_articles) in enumerate(sorted_categories):
+            active_class = " active" if idx == 0 else ""
+            safe_category = category.replace(' ', '_').replace('&', 'and')
+            html += f"""            <button class="tab{active_class}" onclick="openTab(event, '{safe_category}')">{category} <span class="count-badge">{len(cat_articles)}</span></button>
+"""
+
+        html += """        </div>
+"""
+
+        # Generate tab contents
+        for idx, (category, cat_articles) in enumerate(sorted_categories):
+            active_class = " active" if idx == 0 else ""
+            safe_category = category.replace(' ', '_').replace('&', 'and')
+
             html += f"""
-        <h2>{source} <span class="source-count">({len(source_articles)} articles)</span></h2>
+        <div id="{safe_category}" class="tab-content{active_class}">
+            <div class="category-header">{category} ({len(cat_articles)} articles)</div>
 """
 
-            for article, score in source_articles:
+            for article, score in cat_articles:
                 description = article.get('description', '').replace('\n', ' ').strip()
                 if len(description) > 300:
                     description = description[:297] + "..."
 
+                source = article.get('source', 'Unknown')
+
                 html += f"""
-        <div class="article">
-            <div class="article-title">
-                <span class="score">{score:.1f}</span>
-                <a href="{article['link']}" target="_blank">{article['title']}</a>
-            </div>
+            <div class="article">
+                <div class="article-title">
+                    <a href="{article['link']}" target="_blank">{article['title']}</a>
+                </div>
+                <div class="article-meta">
+                    <span class="score">⭐ {score:.1f}</span>
+                    <span class="source-badge">📰 {source}</span>
+                </div>
 """
                 if description:
-                    html += f"""
-            <div class="description">{description}</div>
+                    html += f"""                <div class="description">{description}</div>
 """
-                html += """
-        </div>
+                html += """            </div>
+"""
+
+            html += """        </div>
 """
 
         html += f"""
@@ -673,6 +821,26 @@ class AINewsAggregator:
             Generated by AI RSS Feed Aggregator on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         </div>
     </div>
+
+    <script>
+        function openTab(evt, tabName) {{
+            // Hide all tab contents
+            var tabContents = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabContents.length; i++) {{
+                tabContents[i].classList.remove("active");
+            }}
+
+            // Remove active class from all tabs
+            var tabs = document.getElementsByClassName("tab");
+            for (var i = 0; i < tabs.length; i++) {{
+                tabs[i].classList.remove("active");
+            }}
+
+            // Show the selected tab content and mark tab as active
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }}
+    </script>
 </body>
 </html>
 """
