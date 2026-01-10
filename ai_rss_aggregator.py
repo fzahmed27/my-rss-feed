@@ -6,6 +6,7 @@ Fetches AI/ML news from multiple sources, filters by relevance, and generates da
 
 import argparse
 import datetime
+import difflib
 import json
 import logging
 import os
@@ -362,6 +363,83 @@ class AINewsAggregator:
         logger.info(f"Filtered to {len(filtered)} relevant articles (min_score={min_score}, days_back={days_back})")
         return filtered
 
+    def deduplicate_articles(
+        self,
+        articles: List[Tuple[dict, float]],
+        url_dedup: bool = True,
+        title_similarity_threshold: float = 0.85
+    ) -> List[Tuple[dict, float]]:
+        """
+        Remove duplicate articles using URL matching and title similarity.
+
+        Args:
+            articles: List of (article, score) tuples
+            url_dedup: Enable URL-based deduplication
+            title_similarity_threshold: Minimum similarity ratio for title matching (0.0-1.0)
+
+        Returns:
+            Deduplicated list of (article, score) tuples
+        """
+        if not articles:
+            return articles
+
+        deduplicated = []
+        seen_urls = set()
+        seen_titles = []
+
+        for article, score in articles:
+            url = article.get('link', '').strip()
+            title = article.get('title', '').strip().lower()
+
+            # Skip if no URL or title
+            if not url and not title:
+                continue
+
+            # URL-based deduplication (exact match)
+            if url_dedup and url:
+                if url in seen_urls:
+                    logger.debug(f"Skipping duplicate URL: {article['title'][:50]}...")
+                    continue
+                seen_urls.add(url)
+
+            # Title similarity deduplication
+            is_duplicate = False
+            if title:
+                for seen_title, seen_score in seen_titles:
+                    similarity = difflib.SequenceMatcher(None, title, seen_title).ratio()
+                    if similarity >= title_similarity_threshold:
+                        # Keep the one with higher score
+                        if score > seen_score:
+                            # Remove the previous one and add this one
+                            deduplicated = [
+                                (a, s) for a, s in deduplicated
+                                if a.get('title', '').strip().lower() != seen_title
+                            ]
+                            seen_titles.remove((seen_title, seen_score))
+                            logger.debug(
+                                f"Replacing duplicate (similarity: {similarity:.2f}): "
+                                f"{article['title'][:50]}..."
+                            )
+                            break
+                        else:
+                            logger.debug(
+                                f"Skipping duplicate (similarity: {similarity:.2f}): "
+                                f"{article['title'][:50]}..."
+                            )
+                            is_duplicate = True
+                            break
+
+            if not is_duplicate:
+                deduplicated.append((article, score))
+                if title:
+                    seen_titles.append((title, score))
+
+        removed_count = len(articles) - len(deduplicated)
+        if removed_count > 0:
+            logger.info(f"Removed {removed_count} duplicate articles")
+
+        return deduplicated
+
     def generate_text_digest(self, articles: List[Tuple[dict, float]], date_str: str) -> str:
         """
         Generate plain text digest.
@@ -645,13 +723,14 @@ class AINewsAggregator:
         except Exception as e:
             logger.error(f"Error sending email: {e}")
 
-    def run(self, send_email: bool = True, use_cache: bool = True):
+    def run(self, send_email: bool = True, use_cache: bool = True, enable_dedup: bool = True):
         """
         Run the full aggregation pipeline.
 
         Args:
             send_email: Whether to send email digest
             use_cache: Whether to use feed cache
+            enable_dedup: Whether to enable deduplication
 
         Returns:
             Tuple of (articles_count, filtered_count)
@@ -673,6 +752,15 @@ class AINewsAggregator:
             if not self.email_config.get('send_if_empty', False):
                 logger.info("Skipping output generation for empty results")
                 return len(articles), 0
+
+        # Deduplicate articles
+        dedup_config = self.config.get('deduplication', {})
+        if enable_dedup and dedup_config.get('enabled', True):
+            filtered = self.deduplicate_articles(
+                filtered,
+                url_dedup=dedup_config.get('url_based', True),
+                title_similarity_threshold=dedup_config.get('title_similarity_threshold', 0.85)
+            )
 
         # Generate outputs
         date_str = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -750,6 +838,11 @@ def main():
         action='store_true',
         help='Force refresh all feeds (ignore cache)'
     )
+    parser.add_argument(
+        '--no-dedup',
+        action='store_true',
+        help='Disable article deduplication'
+    )
 
     args = parser.parse_args()
 
@@ -776,7 +869,8 @@ def main():
         # Run aggregator
         total, filtered = aggregator.run(
             send_email=not args.no_email,
-            use_cache=use_cache
+            use_cache=use_cache,
+            enable_dedup=not args.no_dedup
         )
 
         # Print summary

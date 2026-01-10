@@ -41,6 +41,11 @@
     "directory": ".rss_cache",
     "ttl_minutes": 15
   },
+  "deduplication": {
+    "enabled": true,
+    "url_based": true,
+    "title_similarity_threshold": 0.85
+  },
   "email": {
     "enabled": false,
     "smtp_server": "smtp.gmail.com",
