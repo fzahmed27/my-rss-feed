@@ -577,7 +577,7 @@ class AINewsAggregator:
 
     def categorize_articles(self, articles: List[Tuple[dict, float]]) -> Dict[str, List[Tuple[dict, float]]]:
         """
-        Categorize articles into topic groups based on keywords.
+        Categorize articles into topic groups based on keywords and source.
         Each article is assigned to only ONE category - its best match.
 
         Args:
@@ -586,9 +586,17 @@ class AINewsAggregator:
         Returns:
             Dictionary mapping category names to lists of (article, score) tuples
         """
+        # Define sources that belong to "People" category
+        people_sources = {
+            'BAIR Blog', 'Andrej Karpathy', 'Robot Brains Podcast',
+            'Marginal Revolution', 'Paul Krugman', 'Noahpinion',
+            'Abnormal Returns', 'The Reformed Broker'
+        }
+
         # Define keyword categories with priority order
         # Higher priority = more specific topics
         categories = {
+            'People': [],  # Special category for individual bloggers/thought leaders
             'Tactile & Haptics': ['tactile', 'haptic', 'haptics', 'touch sensing', 'force sensing'],
             'Computer Vision': ['computer vision', 'image recognition', 'object detection', 'semantic segmentation',
                               'depth estimation', 'cnn', 'convolutional'],
@@ -596,12 +604,22 @@ class AINewsAggregator:
             'Machine Learning & AI': ['machine learning', 'deep learning', 'neural network', 'pytorch'],
             'Sensors & Hardware': ['sensor', 'sensors', 'embedded', 'edge', 'inference', 'model compression',
                                   'quantization', 'optimization'],
+            'Economics & Markets': ['economics', 'economy', 'inflation', 'monetary policy', 'fiscal policy',
+                                   'GDP', 'recession', 'stock', 'investing', 'portfolio', 'trading',
+                                   'equity', 'bonds', 'ETF', 'valuation', 'dividend', 'bull market', 'bear market'],
             'Other': []  # Catch-all for articles that don't fit other categories
         }
 
         categorized = {cat: [] for cat in categories.keys()}
 
         for article, score in articles:
+            source = article.get('source', '')
+
+            # Check if article is from a "People" source first (highest priority)
+            if source in people_sources:
+                categorized['People'].append((article, score))
+                continue
+
             title = article.get('title', '').lower()
             description = article.get('description', '').lower()
             content = article.get('content', '').lower()
@@ -613,7 +631,7 @@ class AINewsAggregator:
             max_keyword_matches = 0
 
             for category, keywords in categories.items():
-                if category == 'Other':
+                if category in ['Other', 'People']:
                     continue
 
                 # Count keyword matches for this category
