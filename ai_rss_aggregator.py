@@ -590,7 +590,7 @@ class AINewsAggregator:
         people_sources = {
             'BAIR Blog', 'Andrej Karpathy', 'Robot Brains Podcast',
             'Marginal Revolution', 'Paul Krugman', 'Noahpinion',
-            'Abnormal Returns', 'The Reformed Broker'
+            'Abnormal Returns', 'The Reformed Broker', 'Alex Wissner-Gross'
         }
 
         # Define keyword categories with priority order
