@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FeedPulse — AI News Aggregator</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            navy: {
+              900: '#0f172a', 800: '#1e293b', 700: '#334155',
+              600: '#475569', 500: '#64748b',
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="bg-navy-900 text-gray-100 font-sans min-h-screen transition-colors duration-300">
+
+  <!-- ─── TOP NAV ─── -->
+  <header class="sticky top-0 z-50 bg-navy-800/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-[1600px] mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
+      <!-- Logo -->
+      <a href="/" class="flex items-center gap-2 group">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <span class="text-lg font-bold tracking-tight">Feed<span class="text-blue-400">Pulse</span></span>
+      </a>
+
+      <!-- Search -->
+      <div class="hidden sm:flex flex-1 max-w-md mx-8">
+        <div class="relative w-full">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search articles…"
+            class="w-full pl-10 pr-4 py-2 bg-navy-900/60 border border-white/10 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition"
+          >
+        </div>
+      </div>
+
+      <!-- Right actions -->
+      <div class="flex items-center gap-3">
+        <button id="refresh-btn" onclick="triggerRefresh()" title="Refresh feeds"
+          class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-blue-400 transition-colors">
+          <svg id="refresh-icon" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+        <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode"
+          class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-yellow-400 transition-colors">
+          <svg id="theme-icon-dark" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="theme-icon-light" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile search -->
+    <div class="sm:hidden px-4 pb-3">
+      <div class="relative w-full">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input
+          type="text"
+          placeholder="Search articles…"
+          class="search-mobile w-full pl-10 pr-4 py-2 bg-navy-900/60 border border-white/10 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition"
+        >
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside id="sidebar" class="lg:w-64 xl:w-72 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto border-b lg:border-b-0 lg:border-r border-white/5 bg-navy-800/30">
+      <!-- Stats bar -->
+      <div class="p-4 border-b border-white/5">
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div>
+            <div class="text-xl font-bold text-blue-400" id="stat-total">{{ total }}</div>
+            <div class="text-[10px] uppercase tracking-wider text-gray-500 font-medium">Articles</div>
+          </div>
+          <div>
+            <div class="text-xl font-bold text-emerald-400" id="stat-sources">{{ source_count }}</div>
+            <div class="text-[10px] uppercase tracking-wider text-gray-500 font-medium">Sources</div>
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-gray-300 mt-1" id="stat-refresh">{{ last_refresh }}</div>
+            <div class="text-[10px] uppercase tracking-wider text-gray-500 font-medium mt-0.5">Refreshed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category tabs -->
+      <nav class="p-2 lg:p-3 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible" id="category-nav">
+        <button
+          class="category-tab active flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap"
+          data-category="all"
+          onclick="switchCategory('all', this)"
+        >
+          <span>All Articles</span>
+          <span class="cat-count bg-white/10 text-[11px] px-2 py-0.5 rounded-full font-semibold">{{ total }}</span>
+        </button>
+        {% for cat, items in sorted_categories %}
+        <button
+          class="category-tab flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap"
+          data-category="{{ cat }}"
+          onclick="switchCategory('{{ cat }}', this)"
+        >
+          <span>{{ cat }}</span>
+          <span class="cat-count bg-white/10 text-[11px] px-2 py-0.5 rounded-full font-semibold">{{ items | length }}</span>
+        </button>
+        {% endfor %}
+      </nav>
+    </aside>
+
+    <!-- ─── MAIN CONTENT ─── -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto" id="main-content">
+
+      <!-- Loading overlay -->
+      <div id="loading-overlay" class="hidden fixed inset-0 z-40 bg-navy-900/60 backdrop-blur-sm flex items-center justify-center">
+        <div class="flex flex-col items-center gap-4">
+          <div class="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+          <p class="text-sm text-gray-400 font-medium">Refreshing feeds…</p>
+        </div>
+      </div>
+
+      <!-- Error banner -->
+      {% if error %}
+      <div id="error-banner" class="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-start gap-3">
+        <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <!-- Initial loading state -->
+      {% if total == 0 and not error %}
+      <div id="initial-loading" class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <div class="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-6"></div>
+        <h2 class="text-xl font-semibold text-gray-300 mb-2">Fetching your feeds…</h2>
+        <p class="text-sm text-gray-500 max-w-sm">FeedPulse is gathering articles from all your sources. This usually takes 10–30 seconds on first load.</p>
+      </div>
+      {% endif %}
+
+      <!-- Article grid -->
+      <div id="articles-container" class="grid gap-3">
+        {% for article in articles %}
+        <article class="article-card group relative p-4 sm:p-5 rounded-xl bg-navy-800/50 border border-white/5 hover:border-blue-500/30 hover:bg-navy-800/80 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5"
+                 data-source="{{ article.source }}"
+                 data-title="{{ article.title | lower }}"
+                 data-desc="{{ article.description | lower }}">
+          <div class="flex flex-col sm:flex-row sm:items-start gap-3">
+            <div class="flex-1 min-w-0">
+              <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer"
+                 class="text-[15px] font-semibold leading-snug text-gray-100 hover:text-blue-400 transition-colors line-clamp-2 block">
+                {{ article.title }}
+              </a>
+              {% if article.description %}
+              <p class="mt-2 text-sm text-gray-400 leading-relaxed line-clamp-2">{{ article.description }}</p>
+              {% endif %}
+            </div>
+            <div class="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0">
+              <span class="score-pill inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold
+                {% if article.score >= 10 %}bg-emerald-500/15 text-emerald-400 border border-emerald-500/20
+                {% elif article.score >= 5 %}bg-blue-500/15 text-blue-400 border border-blue-500/20
+                {% else %}bg-gray-500/15 text-gray-400 border border-gray-500/20{% endif %}">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                {{ article.score }}
+              </span>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center gap-3 text-xs text-gray-500">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 font-medium text-gray-400">{{ article.source }}</span>
+            {% if article.date %}
+            <span>{{ article.date }}</span>
+            {% endif %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+      <!-- No results message -->
+      <div id="no-results" class="hidden flex flex-col items-center justify-center py-20 text-center">
+        <svg class="w-12 h-12 text-gray-600 mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+        <p class="text-gray-400 font-medium">No articles match your search</p>
+        <p class="text-sm text-gray-600 mt-1">Try a different keyword or clear the search</p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="border-t border-white/5 py-4 text-center text-xs text-gray-600">
+    FeedPulse · Built with Python &amp; Flask · Auto-refreshes every 30 min
+  </footer>
+
+  <script src="/static/app.js"></script>
+
+  {% if refreshing %}
+  <script>document.getElementById('loading-overlay').classList.remove('hidden');</script>
+  {% endif %}
+</body>
+</html>
