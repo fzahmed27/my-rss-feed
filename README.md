@@ -219,19 +219,57 @@ If you're getting 0 filtered articles:
 - Add more keywords or adjust weights
 - Check logs to see if articles are being fetched at all
 
+## 🌐 Web Mode — FeedPulse Dashboard
+
+In addition to CLI digests, you can run FeedPulse as a live web dashboard:
+
+```bash
+# 1. Install deps (includes Flask)
+pip install -r requirements.txt
+
+# 2. Ensure config.json exists (auto-copies from example if missing)
+# 3. Launch the web server
+python app.py
+```
+
+Then open **http://localhost:5050** in your browser.
+
+### Features
+- **Dark/light theme** toggle (persists in localStorage)
+- **Live search** — filter articles as you type
+- **Category sidebar** — browse by topic (AI/ML, Robotics, Economics, People, …)
+- **Manual refresh** button + auto-refresh every 30 minutes in the background
+- **Stats bar** — total articles, active sources, last refresh time
+- **Responsive** — works on mobile (sidebar collapses to horizontal tabs)
+
+### API Endpoints
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/` | GET | Main dashboard |
+| `/api/feeds` | GET | JSON list of articles (optional `?category=…`) |
+| `/api/refresh` | POST | Trigger a manual feed refresh |
+
 ## Project Structure
 
 ```
-rss-feed/
-├── ai_rss_aggregator.py    # Main script
+my-rss-feed/
+├── app.py                   # Flask web server (FeedPulse)
+├── ai_rss_aggregator.py     # Core aggregation logic (CLI + library)
+├── feed_cache.py            # HTTP-aware feed caching
 ├── SignalFeed.xcodeproj     # Native iOS app project
 ├── SignalFeed/              # SwiftUI app source
 ├── config.json              # Your configuration (not in git)
 ├── config.example.json      # Example configuration
 ├── requirements.txt         # Python dependencies
-├── README.md               # This file
-├── venv/                   # Virtual environment (not in git)
-└── ai_digest_YYYYMMDD.*    # Generated digests
+├── templates/
+│   └── index.html           # Jinja2 dashboard template
+├── static/
+│   ├── style.css            # Custom styles (dark/light mode)
+│   └── app.js               # Client-side search, theme, refresh
+├── README.md                # This file
+├── CHANGELOG.md             # Change log
+├── venv/                    # Virtual environment (not in git)
+└── ai_digest_YYYYMMDD.*     # Generated digests (CLI mode)
 ```
 
 ## License
