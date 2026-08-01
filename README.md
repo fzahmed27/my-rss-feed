@@ -48,6 +48,22 @@ The script generates three files:
 - `ai_digest_YYYYMMDD.md` - Markdown digest (great for note-taking apps)
 - `ai_digest_YYYYMMDD.html` - HTML digest (open in browser for nice formatting)
 
+## iOS App
+
+This repo now also includes a native SwiftUI app in `SignalFeed/`.
+
+To run it:
+
+```bash
+open SignalFeed.xcodeproj
+```
+
+Then select the `SignalFeed` scheme and run it on an iPhone simulator.
+
+The iOS app fetches the default RSS sources directly on-device, ranks articles with the same weighted-keyword idea as the Python script, deduplicates by canonical URL and title similarity, groups items by topic, shows source health, and displays the top ranking reasons on each article card. Links open in an in-app Safari sheet.
+
+The app has no third-party dependencies; it uses SwiftUI, `URLSession`, `XMLParser`, and `SFSafariViewController`.
+
 ## Configuration
 
 All configuration is managed through `config.json`:
@@ -208,6 +224,8 @@ If you're getting 0 filtered articles:
 ```
 rss-feed/
 ├── ai_rss_aggregator.py    # Main script
+├── SignalFeed.xcodeproj     # Native iOS app project
+├── SignalFeed/              # SwiftUI app source
 ├── config.json              # Your configuration (not in git)
 ├── config.example.json      # Example configuration
 ├── requirements.txt         # Python dependencies

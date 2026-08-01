@@ -28,6 +28,11 @@ __pycache__/
 *.swo
 *~
 
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
 # OS
 .DS_Store
 Thumbs.db

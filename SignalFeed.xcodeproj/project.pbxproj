@@ -1,0 +1,564 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000010000000000000001 /* SignalFeedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000001 /* SignalFeedApp.swift */; };
+		A10000020000000000000002 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000020000000000000002 /* AppView.swift */; };
+		A10000030000000000000003 /* FeedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000030000000000000003 /* FeedModels.swift */; };
+		A10000040000000000000004 /* DefaultContentConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000040000000000000004 /* DefaultContentConfig.swift */; };
+		A10000050000000000000005 /* RSSFeedParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000050000000000000005 /* RSSFeedParser.swift */; };
+		A10000060000000000000006 /* RankingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000060000000000000006 /* RankingEngine.swift */; };
+		A10000070000000000000007 /* FeedClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000070000000000000007 /* FeedClient.swift */; };
+		A10000080000000000000008 /* FeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000080000000000000008 /* FeedStore.swift */; };
+		A10000090000000000000009 /* ArticleCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000090000000000000009 /* ArticleCard.swift */; };
+		A10000100000000000000010 /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000100000000000000010 /* FeedView.swift */; };
+		A10000110000000000000011 /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000110000000000000011 /* TopicsView.swift */; };
+		A10000120000000000000012 /* SourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000120000000000000012 /* SourcesView.swift */; };
+		A10000130000000000000013 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000130000000000000013 /* SettingsView.swift */; };
+		A10000140000000000000014 /* SafariView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000140000000000000014 /* SafariView.swift */; };
+		A10000150000000000000015 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000160000000000000016 /* Assets.xcassets */; };
+		A10000160000000000000016 /* ArticleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000170000000000000017 /* ArticleDetailView.swift */; };
+		A10000170000000000000017 /* BriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000180000000000000018 /* BriefingView.swift */; };
+		A10000180000000000000018 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000190000000000000019 /* PeopleView.swift */; };
+		A10000190000000000000019 /* SourceEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000200000000000000020 /* SourceEditorView.swift */; };
+		A10000200000000000000020 /* FeedRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000210000000000000021 /* FeedRepository.swift */; };
+		A10000210000000000000021 /* FullTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000220000000000000022 /* FullTextExtractor.swift */; };
+		A10000220000000000000022 /* FeedDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000230000000000000023 /* FeedDiscoveryService.swift */; };
+		A10000230000000000000023 /* OPMLService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000240000000000000024 /* OPMLService.swift */; };
+		A10000240000000000000024 /* SourceDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000250000000000000025 /* SourceDiscoveryView.swift */; };
+		A10000250000000000000025 /* OpportunityInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000260000000000000026 /* OpportunityInboxView.swift */; };
+		A10000260000000000000026 /* FounderModePreviewFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000270000000000000027 /* FounderModePreviewFixtures.swift */; };
+		A10000270000000000000027 /* FounderBriefing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000280000000000000028 /* FounderBriefing.swift */; };
+		A10000280000000000000028 /* EventClusterer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000290000000000000029 /* EventClusterer.swift */; };
+		A10000290000000000000029 /* OpportunityHypothesis.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000300000000000000030 /* OpportunityHypothesis.swift */; };
+		B10000010000000000000001 /* SignalFeedRankingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000010000000000000001 /* SignalFeedRankingTests.swift */; };
+		B10000020000000000000002 /* FeedRepositoryPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000020000000000000002 /* FeedRepositoryPersistenceTests.swift */; };
+		B10000030000000000000003 /* FounderModePreviewFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000030000000000000003 /* FounderModePreviewFixtureTests.swift */; };
+		B10000040000000000000004 /* BriefingSnapshotPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000040000000000000004 /* BriefingSnapshotPersistenceTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B30000010000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A50000010000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A40000010000000000000001;
+			remoteInfo = SignalFeed;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A20000010000000000000001 /* SignalFeedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalFeedApp.swift; sourceTree = "<group>"; };
+		A20000020000000000000002 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
+		A20000030000000000000003 /* FeedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedModels.swift; sourceTree = "<group>"; };
+		A20000040000000000000004 /* DefaultContentConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultContentConfig.swift; sourceTree = "<group>"; };
+		A20000050000000000000005 /* RSSFeedParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSFeedParser.swift; sourceTree = "<group>"; };
+		A20000060000000000000006 /* RankingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingEngine.swift; sourceTree = "<group>"; };
+		A20000070000000000000007 /* FeedClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedClient.swift; sourceTree = "<group>"; };
+		A20000080000000000000008 /* FeedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedStore.swift; sourceTree = "<group>"; };
+		A20000090000000000000009 /* ArticleCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleCard.swift; sourceTree = "<group>"; };
+		A20000100000000000000010 /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
+		A20000110000000000000011 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
+		A20000120000000000000012 /* SourcesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcesView.swift; sourceTree = "<group>"; };
+		A20000130000000000000013 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A20000140000000000000014 /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
+		A20000150000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000160000000000000016 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20000170000000000000017 /* ArticleDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleDetailView.swift; sourceTree = "<group>"; };
+		A20000180000000000000018 /* BriefingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BriefingView.swift; sourceTree = "<group>"; };
+		A20000190000000000000019 /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleView.swift; sourceTree = "<group>"; };
+		A20000200000000000000020 /* SourceEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceEditorView.swift; sourceTree = "<group>"; };
+		A20000210000000000000021 /* FeedRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedRepository.swift; sourceTree = "<group>"; };
+		A20000220000000000000022 /* FullTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullTextExtractor.swift; sourceTree = "<group>"; };
+		A20000230000000000000023 /* FeedDiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedDiscoveryService.swift; sourceTree = "<group>"; };
+		A20000240000000000000024 /* OPMLService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OPMLService.swift; sourceTree = "<group>"; };
+		A20000250000000000000025 /* SourceDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceDiscoveryView.swift; sourceTree = "<group>"; };
+		A20000260000000000000026 /* OpportunityInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpportunityInboxView.swift; sourceTree = "<group>"; };
+		A20000270000000000000027 /* FounderModePreviewFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FounderModePreviewFixtures.swift; sourceTree = "<group>"; };
+		A20000280000000000000028 /* FounderBriefing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FounderBriefing.swift; sourceTree = "<group>"; };
+		A20000290000000000000029 /* EventClusterer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventClusterer.swift; sourceTree = "<group>"; };
+		A20000300000000000000030 /* OpportunityHypothesis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpportunityHypothesis.swift; sourceTree = "<group>"; };
+		A60000010000000000000001 /* SignalFeed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignalFeed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B20000010000000000000001 /* SignalFeedRankingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalFeedRankingTests.swift; sourceTree = "<group>"; };
+		B20000020000000000000002 /* FeedRepositoryPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedRepositoryPersistenceTests.swift; sourceTree = "<group>"; };
+		B20000030000000000000003 /* FounderModePreviewFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FounderModePreviewFixtureTests.swift; sourceTree = "<group>"; };
+		B20000040000000000000004 /* BriefingSnapshotPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BriefingSnapshotPersistenceTests.swift; sourceTree = "<group>"; };
+		B60000010000000000000001 /* SignalFeedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SignalFeedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A70000010000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B70000010000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A80000010000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A80000020000000000000002 /* SignalFeed */,
+				B80000010000000000000001 /* SignalFeedTests */,
+				A80000070000000000000007 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A80000020000000000000002 /* SignalFeed */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000001 /* SignalFeedApp.swift */,
+				A20000150000000000000015 /* Info.plist */,
+				A20000160000000000000016 /* Assets.xcassets */,
+				A80000030000000000000003 /* App */,
+				A80000040000000000000004 /* Models */,
+				A80000050000000000000005 /* Services */,
+				A80000060000000000000006 /* Views */,
+				A80000080000000000000008 /* Preview Content */,
+			);
+			path = SignalFeed;
+			sourceTree = "<group>";
+		};
+		A80000030000000000000003 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A20000020000000000000002 /* AppView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A80000040000000000000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A20000030000000000000003 /* FeedModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A80000050000000000000005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A20000040000000000000004 /* DefaultContentConfig.swift */,
+				A20000290000000000000029 /* EventClusterer.swift */,
+				A20000280000000000000028 /* FounderBriefing.swift */,
+				A20000300000000000000030 /* OpportunityHypothesis.swift */,
+				A20000050000000000000005 /* RSSFeedParser.swift */,
+				A20000060000000000000006 /* RankingEngine.swift */,
+				A20000070000000000000007 /* FeedClient.swift */,
+				A20000220000000000000022 /* FullTextExtractor.swift */,
+				A20000230000000000000023 /* FeedDiscoveryService.swift */,
+				A20000240000000000000024 /* OPMLService.swift */,
+				A20000210000000000000021 /* FeedRepository.swift */,
+				A20000080000000000000008 /* FeedStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A80000060000000000000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A20000170000000000000017 /* ArticleDetailView.swift */,
+				A20000090000000000000009 /* ArticleCard.swift */,
+				A20000180000000000000018 /* BriefingView.swift */,
+				A20000100000000000000010 /* FeedView.swift */,
+				A20000260000000000000026 /* OpportunityInboxView.swift */,
+				A20000190000000000000019 /* PeopleView.swift */,
+				A20000110000000000000011 /* TopicsView.swift */,
+				A20000200000000000000020 /* SourceEditorView.swift */,
+				A20000250000000000000025 /* SourceDiscoveryView.swift */,
+				A20000120000000000000012 /* SourcesView.swift */,
+				A20000130000000000000013 /* SettingsView.swift */,
+				A20000140000000000000014 /* SafariView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A80000070000000000000007 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A60000010000000000000001 /* SignalFeed.app */,
+				B60000010000000000000001 /* SignalFeedTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A80000080000000000000008 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				A20000270000000000000027 /* FounderModePreviewFixtures.swift */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		B80000010000000000000001 /* SignalFeedTests */ = {
+			isa = PBXGroup;
+			children = (
+				B20000040000000000000004 /* BriefingSnapshotPersistenceTests.swift */,
+				B20000020000000000000002 /* FeedRepositoryPersistenceTests.swift */,
+				B20000030000000000000003 /* FounderModePreviewFixtureTests.swift */,
+				B20000010000000000000001 /* SignalFeedRankingTests.swift */,
+			);
+			path = SignalFeedTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A40000010000000000000001 /* SignalFeed */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000010000000000000001 /* Build configuration list for PBXNativeTarget "SignalFeed" */;
+			buildPhases = (
+				AA0000010000000000000001 /* Sources */,
+				A70000010000000000000001 /* Frameworks */,
+				AC0000A100000000000000A1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SignalFeed;
+			productName = SignalFeed;
+			productReference = A60000010000000000000001 /* SignalFeed.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B40000010000000000000001 /* SignalFeedTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B90000010000000000000001 /* Build configuration list for PBXNativeTarget "SignalFeedTests" */;
+			buildPhases = (
+				BA0000010000000000000001 /* Sources */,
+				B70000010000000000000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B50000010000000000000001 /* PBXTargetDependency */,
+			);
+			name = SignalFeedTests;
+			productName = SignalFeedTests;
+			productReference = B60000010000000000000001 /* SignalFeedTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A50000010000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					A40000010000000000000001 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+					B40000010000000000000001 = {
+						CreatedOnToolsVersion = 15.4;
+						TestTargetID = A40000010000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = A90000030000000000000003 /* Build configuration list for PBXProject "SignalFeed" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A80000010000000000000001;
+			productRefGroup = A80000070000000000000007 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A40000010000000000000001 /* SignalFeed */,
+				B40000010000000000000001 /* SignalFeedTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AC0000A100000000000000A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000150000000000000015 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000010000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000001 /* SignalFeedApp.swift in Sources */,
+				A10000020000000000000002 /* AppView.swift in Sources */,
+				A10000030000000000000003 /* FeedModels.swift in Sources */,
+				A10000040000000000000004 /* DefaultContentConfig.swift in Sources */,
+				A10000050000000000000005 /* RSSFeedParser.swift in Sources */,
+				A10000060000000000000006 /* RankingEngine.swift in Sources */,
+				A10000070000000000000007 /* FeedClient.swift in Sources */,
+				A10000080000000000000008 /* FeedStore.swift in Sources */,
+				A10000090000000000000009 /* ArticleCard.swift in Sources */,
+				A10000100000000000000010 /* FeedView.swift in Sources */,
+				A10000110000000000000011 /* TopicsView.swift in Sources */,
+				A10000120000000000000012 /* SourcesView.swift in Sources */,
+				A10000130000000000000013 /* SettingsView.swift in Sources */,
+				A10000140000000000000014 /* SafariView.swift in Sources */,
+				A10000160000000000000016 /* ArticleDetailView.swift in Sources */,
+				A10000170000000000000017 /* BriefingView.swift in Sources */,
+				A10000180000000000000018 /* PeopleView.swift in Sources */,
+				A10000190000000000000019 /* SourceEditorView.swift in Sources */,
+				A10000200000000000000020 /* FeedRepository.swift in Sources */,
+				A10000210000000000000021 /* FullTextExtractor.swift in Sources */,
+				A10000220000000000000022 /* FeedDiscoveryService.swift in Sources */,
+				A10000230000000000000023 /* OPMLService.swift in Sources */,
+				A10000240000000000000024 /* SourceDiscoveryView.swift in Sources */,
+				A10000250000000000000025 /* OpportunityInboxView.swift in Sources */,
+				A10000260000000000000026 /* FounderModePreviewFixtures.swift in Sources */,
+				A10000270000000000000027 /* FounderBriefing.swift in Sources */,
+				A10000280000000000000028 /* EventClusterer.swift in Sources */,
+				A10000290000000000000029 /* OpportunityHypothesis.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BA0000010000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000020000000000000002 /* FeedRepositoryPersistenceTests.swift in Sources */,
+				B10000030000000000000003 /* FounderModePreviewFixtureTests.swift in Sources */,
+				B10000040000000000000004 /* BriefingSnapshotPersistenceTests.swift in Sources */,
+				B10000010000000000000001 /* SignalFeedRankingTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B50000010000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A40000010000000000000001 /* SignalFeed */;
+			targetProxy = B30000010000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AC0000010000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AC0000020000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AC0000030000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+					CODE_SIGN_STYLE = Automatic;
+					CURRENT_PROJECT_VERSION = 1;
+					DEVELOPMENT_TEAM = AG367PDHRX;
+					GENERATE_INFOPLIST_FILE = YES;
+					INFOPLIST_FILE = SignalFeed/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Signal Feed";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.news";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.firozahmed.SignalFeed;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AC0000040000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+					CODE_SIGN_STYLE = Automatic;
+					CURRENT_PROJECT_VERSION = 1;
+					DEVELOPMENT_TEAM = AG367PDHRX;
+					GENERATE_INFOPLIST_FILE = YES;
+					INFOPLIST_FILE = SignalFeed/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Signal Feed";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.news";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.firozahmed.SignalFeed;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		BC0000010000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AG367PDHRX;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.firozahmed.SignalFeedTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SignalFeed.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SignalFeed";
+			};
+			name = Debug;
+		};
+		BC0000020000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AG367PDHRX;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.firozahmed.SignalFeedTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SignalFeed.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SignalFeed";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A90000010000000000000001 /* Build configuration list for PBXNativeTarget "SignalFeed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC0000030000000000000003 /* Debug */,
+				AC0000040000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000030000000000000003 /* Build configuration list for PBXProject "SignalFeed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC0000010000000000000001 /* Debug */,
+				AC0000020000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B90000010000000000000001 /* Build configuration list for PBXNativeTarget "SignalFeedTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BC0000010000000000000001 /* Debug */,
+				BC0000020000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = A50000010000000000000001 /* Project object */;
+}
