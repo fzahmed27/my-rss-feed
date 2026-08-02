@@ -87,6 +87,41 @@ final class SignalFeedRankingTests: XCTestCase {
         XCTAssertEqual(first.compactMap(\.eventCluster?.id), reversed.compactMap(\.eventCluster?.id))
     }
 
+    func testExactURLDuplicateSelectionIsDeterministicAcrossInputOrder() throws {
+        let lowerTrust = article(
+            id: "duplicate-low",
+            title: "PLC control platform release",
+            summary: "Industrial edge inference update.",
+            link: "https://example.com/release?utm_source=low",
+            reputation: 0.8,
+            sourceName: "Aggregator"
+        )
+        let higherTrust = article(
+            id: "duplicate-high",
+            title: "PLC control platform release",
+            summary: "Industrial edge inference update.",
+            link: "https://example.com/release?utm_source=primary",
+            reputation: 1.4,
+            sourceName: "Primary Vendor"
+        )
+
+        let first = RankingEngine.rank(
+            articles: [lowerTrust, higherTrust],
+            settings: .testDefaults,
+            now: now
+        )
+        let reversed = RankingEngine.rank(
+            articles: [higherTrust, lowerTrust],
+            settings: .testDefaults,
+            now: now
+        )
+
+        XCTAssertEqual(first.count, 1)
+        XCTAssertEqual(reversed.count, 1)
+        XCTAssertEqual(try XCTUnwrap(first.first).id, "duplicate-high")
+        XCTAssertEqual(first.map(\.id), reversed.map(\.id))
+    }
+
     func testEditableFounderProfileChangesRanking() throws {
         let customProfile = FounderContextProfile(
             company: "Acme Motion",

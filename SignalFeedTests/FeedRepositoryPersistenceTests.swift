@@ -65,6 +65,24 @@ final class FeedRepositoryPersistenceTests: XCTestCase {
         XCTAssertEqual(repository.loadPresentationSettings(), settings)
     }
 
+    func testDeletingEverySourcePersistsAnIntentionallyEmptyList() {
+        let repository = FeedRepository(inMemory: true)
+        let source = FeedSource(
+            id: "temporary-source",
+            name: "Temporary Source",
+            url: "https://example.com/feed.xml",
+            reputation: 1
+        )
+        repository.saveSources([source], metrics: [:])
+        let store = FeedStore(client: FeedClient(sources: []), repository: repository)
+
+        store.deleteSource(source)
+
+        XCTAssertTrue(repository.loadSources().isEmpty)
+        let reloaded = FeedStore(client: FeedClient(sources: []), repository: repository)
+        XCTAssertTrue(reloaded.sources.isEmpty)
+    }
+
     func testFeedbackExportContainsInspectableInteractionFields() throws {
         let repository = FeedRepository(inMemory: true)
         let store = FeedStore(
@@ -157,5 +175,39 @@ final class FeedRepositoryPersistenceTests: XCTestCase {
             intent: .buildControlsAI,
             now: timestamp
         ).first ?? .placeholder
+    }
+}
+
+final class RSSFeedParserTests: XCTestCase {
+    func testPrefixedAtomParsesAlternateLinkCDATAAndNestedXHTML() throws {
+        let xml = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <atom:feed xmlns:atom="http://www.w3.org/2005/Atom" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+          <atom:entry>
+            <atom:title>Nested <xhtml:b>Atom</xhtml:b> title</atom:title>
+            <atom:link rel="self" href="https://example.com/api/entry/42" />
+            <atom:link rel="alternate" href="https://example.com/articles/42" />
+            <atom:summary><![CDATA[Factory &amp; controls summary]]></atom:summary>
+            <atom:content type="xhtml">
+              <xhtml:div><xhtml:p>Deep <xhtml:b>technical</xhtml:b> content</xhtml:p></xhtml:div>
+            </atom:content>
+            <atom:updated>2026-07-31T15:30:00Z</atom:updated>
+          </atom:entry>
+        </atom:feed>
+        """
+        let source = FeedSource(
+            id: "atom-source",
+            name: "Atom Source",
+            url: "https://example.com/atom.xml",
+            reputation: 1
+        )
+
+        let article = try XCTUnwrap(RSSFeedParser.parse(data: Data(xml.utf8), source: source).first)
+
+        XCTAssertEqual(article.title, "Nested Atom title")
+        XCTAssertEqual(article.link, "https://example.com/articles/42")
+        XCTAssertEqual(article.summary, "Factory & controls summary")
+        XCTAssertEqual(article.content, "Deep technical content")
+        XCTAssertNotNil(article.publishedAt)
     }
 }

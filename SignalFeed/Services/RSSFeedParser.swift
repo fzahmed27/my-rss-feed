@@ -5,6 +5,7 @@ struct RSSFeedParser {
         let delegate = FeedParserDelegate(source: source)
         let parser = XMLParser(data: data)
         parser.delegate = delegate
+        parser.shouldProcessNamespaces = true
         parser.shouldResolveExternalEntities = false
         parser.parse()
         return delegate.articles
@@ -12,19 +13,32 @@ struct RSSFeedParser {
 }
 
 private final class FeedParserDelegate: NSObject, XMLParserDelegate {
+    private enum CapturedField {
+        case title
+        case link
+        case summary
+        case content
+        case published
+        case identifier
+    }
+
     private struct Entry {
         var title = ""
         var link = ""
+        var linkPriority = -1
         var summary = ""
         var content = ""
         var published = ""
+        var identifier = ""
     }
 
     private let source: FeedSource
     private var currentEntry: Entry?
-    private var currentElement = ""
+    private var capturedField: CapturedField?
+    private var captureDepth = 0
+    private var entryDepth = 0
+    private var elementDepth = 0
     private var textBuffer = ""
-    private var isInsideEntry = false
 
     private(set) var articles: [FeedArticle] = []
 
@@ -39,29 +53,53 @@ private final class FeedParserDelegate: NSObject, XMLParserDelegate {
         qualifiedName qName: String?,
         attributes attributeDict: [String: String] = [:]
     ) {
+        elementDepth += 1
         let name = normalized(elementName)
 
         if name == "item" || name == "entry" {
             currentEntry = Entry()
-            isInsideEntry = true
+            entryDepth = elementDepth
+            clearCapture()
+            return
         }
 
-        guard isInsideEntry else { return }
+        guard currentEntry != nil, capturedField == nil else { return }
 
-        currentElement = name
-        textBuffer = ""
-
-        if name == "link", let href = attributeDict["href"] {
-            let rel = attributeDict["rel"] ?? "alternate"
-            if rel == "alternate" || currentEntry?.link.isEmpty == true {
-                currentEntry?.link = href
+        switch name {
+        case "title":
+            startCapture(.title)
+        case "link":
+            if let href = attributeValue(named: "href", in: attributeDict), !href.isEmpty {
+                selectLink(href, relationship: attributeValue(named: "rel", in: attributeDict))
+            } else {
+                startCapture(.link)
             }
+        case "description", "summary", "subtitle":
+            startCapture(.summary)
+        case "content", "encoded":
+            startCapture(.content)
+        case "published", "updated", "created", "pubdate", "date":
+            if currentEntry?.published.isEmpty == true {
+                startCapture(.published)
+            }
+        case "id", "guid":
+            if currentEntry?.identifier.isEmpty == true {
+                startCapture(.identifier)
+            }
+        default:
+            break
         }
     }
 
     func parser(_ parser: XMLParser, foundCharacters string: String) {
-        guard isInsideEntry else { return }
+        guard capturedField != nil else { return }
         textBuffer += string
+    }
+
+    func parser(_ parser: XMLParser, foundCDATA CDATABlock: Data) {
+        guard capturedField != nil,
+              let value = String(data: CDATABlock, encoding: .utf8) else { return }
+        textBuffer += value
     }
 
     func parser(
@@ -70,58 +108,86 @@ private final class FeedParserDelegate: NSObject, XMLParserDelegate {
         namespaceURI: String?,
         qualifiedName qName: String?
     ) {
+        defer { elementDepth -= 1 }
         let name = normalized(elementName)
 
-        if name == "item" || name == "entry" {
+        if let capturedField, elementDepth == captureDepth {
+            commitCapturedValue(textBuffer, to: capturedField)
+            clearCapture()
+        }
+
+        if (name == "item" || name == "entry"), elementDepth == entryDepth {
             finishEntry()
             currentEntry = nil
-            isInsideEntry = false
-            currentElement = ""
-            textBuffer = ""
-            return
+            entryDepth = 0
+            clearCapture()
         }
+    }
 
-        guard isInsideEntry, name == currentElement else { return }
+    private func startCapture(_ field: CapturedField) {
+        capturedField = field
+        captureDepth = elementDepth
+        textBuffer = ""
+    }
 
-        let value = textBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func clearCapture() {
+        capturedField = nil
+        captureDepth = 0
+        textBuffer = ""
+    }
+
+    private func commitCapturedValue(_ rawValue: String, to field: CapturedField) {
+        let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty else { return }
 
-        switch name {
-        case "title":
-            updateCurrentEntry { entry in
+        updateCurrentEntry { entry in
+            switch field {
+            case .title:
                 entry.title = append(value, to: entry.title)
-            }
-        case "link":
-            if currentEntry?.link.isEmpty == true {
-                updateCurrentEntry { entry in
+            case .link:
+                if entry.link.isEmpty {
                     entry.link = value
+                    entry.linkPriority = 2
                 }
-            }
-        case "description", "summary", "subtitle":
-            updateCurrentEntry { entry in
+            case .summary:
                 entry.summary = append(value, to: entry.summary)
-            }
-        case "content", "encoded", "content:encoded":
-            updateCurrentEntry { entry in
+            case .content:
                 entry.content = append(value, to: entry.content)
-            }
-        case "published", "updated", "created", "pubdate", "date", "dc:date":
-            if currentEntry?.published.isEmpty == true {
-                updateCurrentEntry { entry in
+            case .published:
+                if entry.published.isEmpty {
                     entry.published = value
                 }
+            case .identifier:
+                if entry.identifier.isEmpty {
+                    entry.identifier = value
+                }
             }
-        default:
-            break
+        }
+    }
+
+    private func selectLink(_ href: String, relationship: String?) {
+        let relation = relationship?.lowercased() ?? ""
+        let priority = switch relation {
+        case "alternate": 3
+        case "": 2
+        case "self": 0
+        default: 1
         }
 
-        textBuffer = ""
+        updateCurrentEntry { entry in
+            if priority > entry.linkPriority {
+                entry.link = href
+                entry.linkPriority = priority
+            }
+        }
     }
 
     private func finishEntry() {
         guard let entry = currentEntry else { return }
         let title = entry.title.removingHTML().collapsedWhitespace()
-        let link = entry.link.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallbackLink = entry.identifier.hasPrefix("http") ? entry.identifier : ""
+        let link = (entry.link.isEmpty ? fallbackLink : entry.link)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !title.isEmpty, !link.isEmpty else { return }
 
@@ -129,9 +195,8 @@ private final class FeedParserDelegate: NSObject, XMLParserDelegate {
         let content = (entry.content.isEmpty ? entry.summary : entry.content)
             .removingHTML()
             .collapsedWhitespace()
-        let id = RankingEngine.canonicalURL(from: link).isEmpty
-            ? "\(source.id)-\(title.hashValue)"
-            : RankingEngine.canonicalURL(from: link)
+        let canonicalURL = RankingEngine.canonicalURL(from: link)
+        let id = canonicalURL.isEmpty ? "\(source.id):\(link.lowercased())" : canonicalURL
 
         articles.append(
             FeedArticle(
@@ -150,7 +215,14 @@ private final class FeedParserDelegate: NSObject, XMLParserDelegate {
     }
 
     private func normalized(_ elementName: String) -> String {
-        elementName.lowercased()
+        elementName
+            .split(separator: ":")
+            .last?
+            .lowercased() ?? elementName.lowercased()
+    }
+
+    private func attributeValue(named name: String, in attributes: [String: String]) -> String? {
+        attributes.first { normalized($0.key) == name }?.value
     }
 
     private func updateCurrentEntry(_ update: (inout Entry) -> Void) {
@@ -159,9 +231,8 @@ private final class FeedParserDelegate: NSObject, XMLParserDelegate {
         currentEntry = entry
     }
 
-    private func append(_ value: String, to existing: String?) -> String {
-        guard let existing, !existing.isEmpty else { return value }
-        return "\(existing) \(value)"
+    private func append(_ value: String, to existing: String) -> String {
+        existing.isEmpty ? value : "\(existing) \(value)"
     }
 }
 

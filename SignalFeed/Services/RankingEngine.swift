@@ -38,7 +38,12 @@ enum RankingEngine {
             .filter { $0.score >= settings.minimumScore }
             .sorted { first, second in
                 if first.score == second.score {
-                    return (first.article.publishedAt ?? .distantPast) > (second.article.publishedAt ?? .distantPast)
+                    let firstDate = first.article.publishedAt ?? .distantPast
+                    let secondDate = second.article.publishedAt ?? .distantPast
+                    if firstDate == secondDate {
+                        return deterministicKey(for: first) < deterministicKey(for: second)
+                    }
+                    return firstDate > secondDate
                 }
                 return first.score > second.score
             }
@@ -218,19 +223,33 @@ enum RankingEngine {
     }
 
     private static func removeExactURLDuplicates(_ articles: [ScoredArticle]) -> [ScoredArticle] {
-        var seenURLs = Set<String>()
-        var deduped: [ScoredArticle] = []
-
-        for article in articles {
-            let canonical = article.canonicalURL
-            guard canonical.isEmpty || !seenURLs.contains(canonical) else { continue }
-            if !canonical.isEmpty {
-                seenURLs.insert(canonical)
-            }
-            deduped.append(article)
+        let groups = Dictionary(grouping: articles) { article in
+            article.canonicalURL.isEmpty ? "id:\(article.id)" : "url:\(article.canonicalURL)"
         }
 
-        return deduped
+        return groups.keys.sorted().compactMap { key in
+            groups[key]?.sorted(by: duplicateRepresentativeComesFirst).first
+        }
+    }
+
+    private static func duplicateRepresentativeComesFirst(_ first: ScoredArticle, _ second: ScoredArticle) -> Bool {
+        if first.article.sourceReputation != second.article.sourceReputation {
+            return first.article.sourceReputation > second.article.sourceReputation
+        }
+        if first.score != second.score {
+            return first.score > second.score
+        }
+        let firstDate = first.article.publishedAt ?? .distantPast
+        let secondDate = second.article.publishedAt ?? .distantPast
+        if firstDate != secondDate {
+            return firstDate > secondDate
+        }
+        return deterministicKey(for: first) < deterministicKey(for: second)
+    }
+
+    private static func deterministicKey(for article: ScoredArticle) -> String {
+        [article.canonicalURL, article.article.sourceID, article.id, article.article.link]
+            .joined(separator: "|")
     }
 
     private static func weightedMatches(in text: String, weights: [String: Double]) -> [(term: String, weight: Double)] {

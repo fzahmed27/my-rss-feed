@@ -96,8 +96,9 @@ final class FeedStore {
         let initialFounderProfile = repository.loadFounderProfile() ?? .industrialAIFounder
 
         let repositorySources = repository.loadSources()
+        let hasPersistedSources = repository.hasPersistedSources()
         let migratedSources = Self.loadLegacySources()
-        let initialSources = overrideSources ?? (repositorySources.isEmpty ? migratedSources : repositorySources)
+        let initialSources = overrideSources ?? (hasPersistedSources ? repositorySources : migratedSources)
 
         let repositoryMetrics = repository.loadSourceMetrics()
 
@@ -133,7 +134,7 @@ final class FeedStore {
             repository.saveFounderProfile(initialFounderProfile)
         }
 
-        if repositorySources.isEmpty {
+        if !hasPersistedSources {
             repository.saveSources(initialSources, metrics: initialMetrics)
         }
 

@@ -11,6 +11,7 @@ final class FeedRepository {
         static let briefingCompletions = "briefingCompletions"
         static let opportunityHypotheses = "opportunityHypotheses"
         static let founderProfile = "founderProfile"
+        static let sourcesInitialized = "sourcesInitialized"
     }
 
     private let context: ModelContext
@@ -124,6 +125,10 @@ final class FeedRepository {
             .map(\.source)
     }
 
+    func hasPersistedSources() -> Bool {
+        blob(for: BlobKey.sourcesInitialized) != nil || !fetchSourceRecords().isEmpty
+    }
+
     func saveSources(_ sources: [FeedSource], metrics: [String: SourceHealthSummary]) {
         let existing = Dictionary(uniqueKeysWithValues: fetchSourceRecords().map { ($0.id, $0) })
         let incomingIDs = Set(sources.map(\.id))
@@ -144,6 +149,7 @@ final class FeedRepository {
         }
 
         saveContext()
+        upsertBlob(key: BlobKey.sourcesInitialized, data: Data([1]))
     }
 
     func loadSourceMetrics() -> [String: SourceHealthSummary] {
