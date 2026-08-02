@@ -1,0 +1,54 @@
+name: iOS
+
+on:
+  pull_request:
+    paths:
+      - "SignalFeed/**"
+      - "SignalFeedTests/**"
+      - "SignalFeed.xcodeproj/**"
+      - ".github/workflows/ios.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "SignalFeed/**"
+      - "SignalFeedTests/**"
+      - "SignalFeed.xcodeproj/**"
+      - ".github/workflows/ios.yml"
+
+concurrency:
+  group: ios-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build app
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project SignalFeed.xcodeproj \
+            -scheme SignalFeed \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/SignalFeedBuild" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Run tests
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project SignalFeed.xcodeproj \
+            -scheme SignalFeed \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -derivedDataPath "$RUNNER_TEMP/SignalFeedTests" \
+            test

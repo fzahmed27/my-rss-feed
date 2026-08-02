@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal Feed Founder Mode Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --panel: #151b23;
+      --panel-2: #1f2630;
+      --text: #f0f3f6;
+      --muted: #9aa7b4;
+      --line: #2e3742;
+      --accent: #58a6ff;
+      --done: #3fb950;
+      --warn: #d29922;
+      --later: #8b949e;
+      --risk: #f85149;
+      --critical: #ff7b72;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #0b0f14;
+      padding: 22px 20px 18px;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 20px 42px;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(24px, 4vw, 34px);
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      font-size: 15px;
+    }
+
+    .subhead {
+      color: var(--muted);
+      margin-top: 6px;
+      max-width: 760px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-bottom: 18px;
+    }
+
+    .metric,
+    .panel,
+    .feature,
+    .task-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .metric {
+      padding: 16px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .layout {
+      grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+      align-items: start;
+    }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .section-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .section-row {
+      display: grid;
+      grid-template-columns: minmax(150px, 220px) minmax(160px, 1fr) 70px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .bar {
+      height: 9px;
+      overflow: hidden;
+      background: #0b0f14;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+
+    .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--done), var(--accent));
+      width: var(--value);
+    }
+
+    .percent {
+      text-align: right;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 18px 0 14px;
+    }
+
+    button {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 7px 11px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #07111f;
+      font-weight: 700;
+    }
+
+    .features {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .feature {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .feature p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .board-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 18px 0 12px;
+    }
+
+    .board-header h2 {
+      margin-bottom: 0;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(240px, 1fr));
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .lane {
+      min-width: 240px;
+      background: #0b0f14;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .lane-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .task-card {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .task-card p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      width: fit-content;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .priority-p0 { color: var(--critical); background: rgba(248, 81, 73, 0.12); }
+    .priority-p1 { color: var(--warn); background: rgba(210, 153, 34, 0.12); }
+    .priority-p2 { color: var(--accent); background: rgba(88, 166, 255, 0.12); }
+
+    details {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .empty-lane {
+      color: var(--muted);
+      font-size: 13px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .status {
+      width: fit-content;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+    }
+
+    .done { color: var(--done); }
+    .in-progress { color: var(--warn); }
+    .planned { color: var(--accent); }
+    .later { color: var(--later); }
+
+    .status.done { background: rgba(63, 185, 80, 0.12); }
+    .status.in-progress { background: rgba(210, 153, 34, 0.12); }
+    .status.planned { background: rgba(88, 166, 255, 0.12); }
+    .status.later { background: rgba(139, 148, 158, 0.12); }
+
+    ol, ul {
+      margin: 0;
+      padding-left: 22px;
+      color: var(--muted);
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      margin-top: 18px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 820px) {
+      .layout,
+      .section-row {
+        grid-template-columns: 1fr;
+      }
+
+      .board {
+        grid-template-columns: 1fr;
+      }
+
+      .percent {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Signal Feed Founder Mode</h1>
+    <p class="subhead">Feature-build dashboard for turning the RSS app into a bounded daily decision system for an industrial AI founder.</p>
+  </header>
+
+  <main>
+    <section class="grid metrics" id="metrics"></section>
+
+    <section class="grid layout">
+      <div class="panel">
+        <h2>Workstream Progress</h2>
+        <div class="section-list" id="sections"></div>
+      </div>
+
+      <aside class="panel">
+        <h2>Next 5 Commits</h2>
+        <ol id="commits"></ol>
+      </aside>
+    </section>
+
+    <div class="filters" id="filters"></div>
+
+    <section class="grid features" id="features"></section>
+
+    <section class="board-header">
+      <h2>Project Board</h2>
+      <p class="subhead">Card-style tracker for app-development work. Use this as the build queue, then move cards across lanes as commits land.</p>
+    </section>
+
+    <section class="board" id="board"></section>
+
+    <section class="panel" style="margin-top: 16px;">
+      <h2>Open Product Decisions</h2>
+      <ul id="decisions"></ul>
+    </section>
+
+    <p class="footer-note">Source of truth: <code>FOUNDER_MODE_TODO.md</code>. Update the data block in this file when TODO status changes, or wire it to a parser later.</p>
+  </main>
+
+  <script>
+    const sections = [
+      { name: "MVP: Daily Decision Loop", done: 11, total: 12 },
+      { name: "Intent And Profile", done: 9, total: 13 },
+      { name: "Explainable Ranking", done: 10, total: 13 },
+      { name: "Feedback And Learning", done: 7, total: 11 },
+      { name: "Founder Briefing", done: 9, total: 14 },
+      { name: "Opportunity Engine", done: 5, total: 9 },
+      { name: "Enrichment, Events, And Dedupe", done: 5, total: 9 },
+      { name: "Knowledge, Trends, And Memory", done: 0, total: 11 },
+      { name: "Instrumentation And Evaluation", done: 0, total: 9 },
+      { name: "Trust, Privacy, And Reliability", done: 2, total: 9 },
+      { name: "Testing", done: 14, total: 16 }
+    ];
+
+    const features = [
+      {
+        title: "Bounded reading session",
+        section: "MVP",
+        status: "done",
+        detail: "Must Read, Worth Skimming, collapsed More, progress, caught-up message, and full-feed escape hatch."
+      },
+      {
+        title: "20-minute reading budget",
+        section: "MVP",
+        status: "done",
+        detail: "Persisted budget setting with planned review time shown in Feed and Briefing."
+      },
+      {
+        title: "Refresh stability",
+        section: "MVP",
+        status: "planned",
+        detail: "Keep completed sessions stable unless a material new signal crosses the urgency threshold."
+      },
+      {
+        title: "Industrial founder profile",
+        section: "Profile",
+        status: "in-progress",
+        detail: "Central weights exist; editable company/stage/customer/project profile controls still need UI."
+      },
+      {
+        title: "Intent modes",
+        section: "Profile",
+        status: "done",
+        detail: "Five industrial-founder modes are visible and persisted. Roadmap taxonomy still needs a product call."
+      },
+      {
+        title: "Explainable weighted ranking",
+        section: "Ranking",
+        status: "done",
+        detail: "Component scoring, penalties, relevance labels, and expandable ranking details are implemented."
+      },
+      {
+        title: "Signal contract",
+        section: "Ranking",
+        status: "done",
+        detail: "What happened, why it matters, should-care, suggested action, confidence, uncertainty, evidence, and reading time."
+      },
+      {
+        title: "Corroboration scoring",
+        section: "Ranking",
+        status: "planned",
+        detail: "Add source diversity and confirmation signals across multiple articles or primary sources."
+      },
+      {
+        title: "Structured feedback",
+        section: "Learning",
+        status: "done",
+        detail: "Reason-coded thumbs up/down, undo, gradual learning, muted topics, and export are implemented."
+      },
+      {
+        title: "Layer-specific feedback",
+        section: "Learning",
+        status: "planned",
+        detail: "Attach feedback to source, topic, entity, event, summary, or ranking instead of only article keywords."
+      },
+      {
+        title: "Founder Briefing",
+        section: "Briefing",
+        status: "done",
+        detail: "Five-slot briefing exists with empty states and sharing."
+      },
+      {
+        title: "Briefing history",
+        section: "Briefing",
+        status: "done",
+        detail: "Persist generated briefings and explicit completion records with date, intent, and review history."
+      },
+      {
+        title: "Opportunity hypotheses",
+        section: "Opportunity",
+        status: "done",
+        detail: "Persist testable hypotheses with customer, trigger, wedge, evidence, confidence, next test, and research queue state."
+      },
+      {
+        title: "Event clustering",
+        section: "Enrichment",
+        status: "planned",
+        detail: "Cluster duplicate coverage into representative event cards with expandable sources."
+      },
+      {
+        title: "Knowledge graph",
+        section: "Memory",
+        status: "later",
+        detail: "Start with readable entity/topic pages and relationship-powered retrieval, not a visual graph."
+      },
+      {
+        title: "Trend detection",
+        section: "Memory",
+        status: "later",
+        detail: "Detect acceleration against baselines with evidence, caveats, and relevance."
+      },
+      {
+        title: "Metrics and evaluation",
+        section: "Ops",
+        status: "planned",
+        detail: "Add Weekly Useful Decisions, completion time, useful rate, dedupe quality, and source health dashboards."
+      },
+      {
+        title: "Privacy and trust controls",
+        section: "Trust",
+        status: "planned",
+        detail: "Add profile/memory deletion, export, retention controls, and prompt-injection defenses."
+      }
+    ];
+
+    const projectCards = [
+      {
+        id: "SF-001",
+        title: "Repository persistence tests",
+        lane: "Done",
+        priority: "P0",
+        owner: "Engineering",
+        estimate: "0.5d",
+        area: "Testing",
+        outcome: "Prove read state, muted topics, presentation settings, and feedback export survive persistence.",
+        acceptance: [
+          "Read/unread state round-trips through repository storage.",
+          "Muted topics expire and reload correctly.",
+          "Intent and reading-budget presentation settings round-trip through repository storage.",
+          "Feedback export contains article title, feedback, reasons, and updated time."
+        ]
+      },
+      {
+        id: "SF-002",
+        title: "Preview fixtures for Founder Mode states",
+        lane: "Done",
+        priority: "P1",
+        owner: "Design + Engineering",
+        estimate: "0.5d",
+        area: "UI",
+        outcome: "Make Fresh Feed, Caught Up, No High Quality, Muted Topic, Long Title, and large text states easy to inspect.",
+        acceptance: [
+          "FeedView and ArticleCard previews cover each state.",
+          "Long titles and Dynamic Type do not break card layout.",
+          "Muted-topic state is visually inspectable."
+        ]
+      },
+      {
+        id: "SF-003",
+        title: "Persist briefing snapshots",
+        lane: "Done",
+        priority: "P1",
+        owner: "Engineering",
+        estimate: "1d",
+        area: "Briefing",
+        outcome: "Saved/shared briefings become durable objects instead of transient generated text.",
+        acceptance: [
+          "Briefing snapshot stores generated date, intent, budget, and five slots.",
+          "User can revisit latest saved briefing.",
+          "Share action uses saved snapshot content."
+        ]
+      },
+      {
+        id: "SF-004",
+        title: "Event clustering and representative sources",
+        lane: "Done",
+        priority: "P0",
+        owner: "Ranking",
+        estimate: "2d",
+        area: "Ranking",
+        outcome: "Reduce duplicate coverage by grouping similar articles into one event with expandable sources.",
+        acceptance: [
+          "Similar title/content items cluster deterministically.",
+          "Primary or highest-reputation source is chosen as representative.",
+          "Clustered cards expose alternate sources."
+        ]
+      },
+      {
+        id: "SF-005",
+        title: "Editable founder profile controls",
+        lane: "Done",
+        priority: "P1",
+        owner: "Product + Engineering",
+        estimate: "2d",
+        area: "Profile",
+        outcome: "Founder context becomes inspectable and correctable, not only embedded in static weights.",
+        acceptance: [
+          "Profile screen edits company, customers, product areas, competitors, priorities, and topics.",
+          "Profile export and reset controls exist.",
+          "Ranking reads from persisted profile configuration."
+        ]
+      },
+      {
+        id: "SF-006",
+        title: "Briefing completion history",
+        lane: "Done",
+        priority: "P2",
+        owner: "Product",
+        estimate: "1d",
+        area: "MVP",
+        outcome: "Track whether the founder completed the daily review and when they stopped.",
+        acceptance: [
+          "Completion is stored with date and intent.",
+          "Completed state survives app relaunch.",
+          "New critical item rule is documented before implementation."
+        ]
+      },
+      {
+        id: "SF-007",
+        title: "Opportunity hypothesis object",
+        lane: "Done",
+        priority: "P2",
+        owner: "Product + Ranking",
+        estimate: "3d",
+        area: "Opportunity",
+        outcome: "Turn opportunity flags into testable hypotheses with evidence and next tests.",
+        acceptance: [
+          "Opportunity includes customer, trigger, wedge, evidence, confidence, and next test.",
+          "Cards are clearly labeled as hypotheses.",
+          "Opportunities can be saved to a research queue."
+        ]
+      },
+      {
+        id: "SF-008",
+        title: "Founder Mode dashboard",
+        lane: "Done",
+        priority: "P1",
+        owner: "Engineering",
+        estimate: "0.5d",
+        area: "Ops",
+        outcome: "Local dashboard tracks workstreams, feature cards, next commits, and product decisions.",
+        acceptance: [
+          "Dashboard opens as static HTML.",
+          "Progress and project cards are visible.",
+          "Cards can be filtered by product area."
+        ]
+      }
+    ];
+
+    const commits = [
+      "Add feedback-driven preference update tests at the store level.",
+      "Add accessibility audit tests for tap targets, labels, contrast, and Dynamic Type.",
+      "Add two opportunity/opening slots to Founder Briefing.",
+      "Extend the founder profile with stage, geography, stack, evidence, risk, and notification fields.",
+      "Add source corroboration and source-diversity scoring."
+    ];
+
+    const decisions = [
+      "Keep five industrial-founder intent modes or migrate to Operate / Explore / Fundraise / Build?",
+      "Should briefings be generated on open, on a schedule, or with a hybrid model?",
+      "Which actions count toward Weekly Useful Decisions?",
+      "Which inferred memory/profile facts require confirmation before affecting ranking?"
+    ];
+
+    const filters = ["All", "MVP", "Profile", "Ranking", "Learning", "Briefing", "Opportunity", "Enrichment", "Memory", "Ops", "Trust"];
+    let activeFilter = "All";
+
+    function percent(done, total) {
+      return total === 0 ? 0 : Math.round((done / total) * 100);
+    }
+
+    function renderMetrics() {
+      const totalDone = sections.reduce((sum, section) => sum + section.done, 0);
+      const totalItems = sections.reduce((sum, section) => sum + section.total, 0);
+      const mvp = sections.find(section => section.name.startsWith("MVP"));
+      const doneFeatures = features.filter(feature => feature.status === "done").length;
+      const plannedFeatures = features.filter(feature => feature.status === "planned").length;
+      const nowCards = projectCards.filter(card => card.lane === "Now").length;
+
+      document.getElementById("metrics").innerHTML = [
+        metric(`${percent(totalDone, totalItems)}%`, "overall TODO completion"),
+        metric(`${percent(mvp.done, mvp.total)}%`, "MVP daily loop completion"),
+        metric(doneFeatures, "features implemented"),
+        metric(nowCards, "cards in active build lane")
+      ].join("");
+    }
+
+    function metric(value, label) {
+      return `<div class="metric"><strong>${value}</strong><span>${label}</span></div>`;
+    }
+
+    function renderSections() {
+      document.getElementById("sections").innerHTML = sections.map(section => {
+        const value = percent(section.done, section.total);
+        return `
+          <div class="section-row">
+            <h3>${section.name}</h3>
+            <div class="bar" aria-label="${section.name} ${value}% complete">
+              <div class="fill" style="--value:${value}%"></div>
+            </div>
+            <div class="percent">${section.done}/${section.total}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderFilters() {
+      document.getElementById("filters").innerHTML = filters.map(filter => `
+        <button class="${filter === activeFilter ? "active" : ""}" data-filter="${filter}">${filter}</button>
+      `).join("");
+
+      document.querySelectorAll("[data-filter]").forEach(button => {
+        button.addEventListener("click", () => {
+          activeFilter = button.dataset.filter;
+          renderFilters();
+          renderFeatures();
+        });
+      });
+    }
+
+    function renderFeatures() {
+      const filtered = activeFilter === "All"
+        ? features
+        : features.filter(feature => feature.section === activeFilter);
+
+      document.getElementById("features").innerHTML = filtered.map(feature => `
+        <article class="feature">
+          <span class="status ${feature.status}">${labelFor(feature.status)}</span>
+          <h3>${feature.title}</h3>
+          <p>${feature.detail}</p>
+        </article>
+      `).join("");
+    }
+
+    function renderBoard() {
+      const lanes = ["Now", "Next", "Later", "Done"];
+      document.getElementById("board").innerHTML = lanes.map(lane => {
+        const cards = projectCards.filter(card => card.lane === lane);
+        return `
+          <div class="lane">
+            <div class="lane-title">
+              <span>${lane}</span>
+              <span>${cards.length}</span>
+            </div>
+            <div class="task-list">
+              ${cards.length ? cards.map(renderProjectCard).join("") : `<div class="empty-lane">No cards in this lane.</div>`}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderProjectCard(card) {
+      return `
+        <article class="task-card">
+          <div class="card-top">
+            <h3>${card.id}: ${card.title}</h3>
+            <span class="pill priority-${card.priority.toLowerCase()}">${card.priority}</span>
+          </div>
+          <p>${card.outcome}</p>
+          <div class="meta">
+            <span class="pill">${card.area}</span>
+            <span class="pill">${card.owner}</span>
+            <span class="pill">${card.estimate}</span>
+          </div>
+          <details>
+            <summary>Acceptance criteria</summary>
+            <ul>
+              ${card.acceptance.map(item => `<li>${item}</li>`).join("")}
+            </ul>
+          </details>
+        </article>
+      `;
+    }
+
+    function labelFor(status) {
+      switch (status) {
+        case "done": return "Done";
+        case "in-progress": return "In progress";
+        case "planned": return "Planned";
+        default: return "Later";
+      }
+    }
+
+    function renderLists() {
+      document.getElementById("commits").innerHTML = commits.map(item => `<li>${item}</li>`).join("");
+      document.getElementById("decisions").innerHTML = decisions.map(item => `<li>${item}</li>`).join("");
+    }
+
+    renderMetrics();
+    renderSections();
+    renderFilters();
+    renderFeatures();
+    renderBoard();
+    renderLists();
+  </script>
+</body>
+</html>
